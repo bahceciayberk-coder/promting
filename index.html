@@ -1,410 +1,1877 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <meta name="description" content="An illustrated introduction to prompt engineering: language models, attention, transformers, and the design of useful prompts.">
-  <title>Introduction to Prompt Engineering · promting</title>
-  <style>
-    :root {
-      --ink: #18272a;
-      --muted: #526368;
-      --line: #d9ded9;
-      --paper: #f7f6f1;
-      --card: #fffefa;
-      --teal: #155a59;
-      --teal-soft: #e5efeb;
-      --orange: #ec784b;
-      --orange-soft: #fff0e5;
-      --shadow: 0 18px 50px rgb(24 39 42 / 7%);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--ink);
-      background: var(--paper);
-      scroll-behavior: smooth;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering &amp; LLMs</title>
+<meta name="description" content="An educational guide to prompt engineering and large language models, with an interactive LLM playground.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f0f2f8;
+  --text: #1a1c29;
+  --muted: #5a6075;
+  --border: #e1e4ee;
+  --accent: #5b4bdb;
+  --accent-2: #0f9d9a;
+  --accent-soft: #ecE9ff;
+  --warn: #c2410c;
+  --warn-soft: #ffedd5;
+  --ok: #2b8a3e;
+  --ok-soft: #e3f5e8;
+  --code-bg: #161827;
+  --code-text: #e6e8f2;
+  --hot: #e8590c;
+  --cold: #1c7ed6;
+  --shadow: 0 1px 2px rgba(20,20,40,.05), 0 10px 30px rgba(20,20,40,.06);
+  --radius: 16px;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+:root[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #171a23;
+  --surface-2: #1f2330;
+  --text: #e8eaf2;
+  --muted: #9aa1b8;
+  --border: #2a2f3e;
+  --accent: #8b7cff;
+  --accent-2: #2ec4c0;
+  --accent-soft: #262242;
+  --warn: #ff8a4c;
+  --warn-soft: #3a2316;
+  --ok: #51cf66;
+  --ok-soft: #17301e;
+  --code-bg: #0b0d13;
+  --code-text: #e6e8f2;
+  --hot: #ff8a4c;
+  --cold: #4dabf7;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1117;
+    --surface: #171a23;
+    --surface-2: #1f2330;
+    --text: #e8eaf2;
+    --muted: #9aa1b8;
+    --border: #2a2f3e;
+    --accent: #8b7cff;
+    --accent-2: #2ec4c0;
+    --accent-soft: #262242;
+    --warn: #ff8a4c;
+    --warn-soft: #3a2316;
+    --ok: #51cf66;
+    --ok-soft: #17301e;
+    --code-bg: #0b0d13;
+    --code-text: #e6e8f2;
+    --hot: #ff8a4c;
+    --cold: #4dabf7;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.25);
+  }
+}
 
-    * { box-sizing: border-box; }
-    body { margin: 0; line-height: 1.68; }
-    a { color: var(--teal); text-underline-offset: .18em; }
-    a:hover { color: #0b7770; }
-    button, summary { font: inherit; }
-    :focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
-    .skip-link { position: absolute; top: -60px; left: 16px; z-index: 20; padding: 8px 12px; background: var(--ink); color: white; }
-    .skip-link:focus { top: 12px; }
-    .progress { position: fixed; inset: 0 auto auto 0; z-index: 30; width: 0; height: 4px; background: var(--orange); }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16.5px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
 
-    .site-header { position: sticky; top: 0; z-index: 10; background: rgb(247 246 241 / 94%); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
-    .header-inner { max-width: 1240px; min-height: 70px; margin: auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-    .brand { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); font-size: .88rem; font-weight: 800; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
-    .brand-mark { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: white; background: var(--teal); font-size: .76rem; letter-spacing: 0; }
-    .top-nav { display: flex; align-items: center; gap: 25px; font-size: .84rem; font-weight: 650; }
-    .top-nav a { color: var(--muted); text-decoration: none; white-space: nowrap; }
-    .top-nav a:hover { color: var(--teal); }
-    .top-nav .nav-pill { padding: 9px 15px; border: 1px solid var(--teal); border-radius: 999px; color: var(--teal); }
+/* ---------- Header ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 24px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; }
+.brand-logo {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: grid; place-items: center; color: #fff; font-size: 15px; font-weight: 800;
+}
+.theme-btn {
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer;
+}
+.theme-btn:hover { border-color: var(--accent); }
 
-    .hero { position: relative; overflow: hidden; background: #e8efea; border-bottom: 1px solid var(--line); }
-    .hero::before { content: ""; position: absolute; width: 550px; height: 550px; right: -150px; top: -220px; border: 1px solid rgb(21 90 89 / 12%); border-radius: 50%; box-shadow: 0 0 0 85px rgb(21 90 89 / 3%), 0 0 0 170px rgb(21 90 89 / 3%); pointer-events: none; }
-    .hero-inner { position: relative; max-width: 1240px; min-height: 540px; margin: auto; padding: 80px 32px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr); align-items: center; gap: 70px; }
-    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--teal); font-size: .74rem; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
-    .eyebrow::before { content: ""; display: inline-block; width: 21px; height: 2px; background: currentColor; }
-    h1, h2, h3 { line-height: 1.13; letter-spacing: -.035em; }
-    h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; }
-    h1 { max-width: 760px; margin: 20px 0 24px; font-size: clamp(3.2rem, 6vw, 5.7rem); }
-    .hero-lead { max-width: 620px; margin: 0; color: #3c5557; font-size: clamp(1.1rem, 1.6vw, 1.3rem); line-height: 1.6; }
-    .hero-actions { display: flex; align-items: center; gap: 20px; margin-top: 34px; }
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 20px; border-radius: 8px; background: var(--teal); color: white; text-decoration: none; font-size: .9rem; font-weight: 750; box-shadow: 0 8px 18px rgb(21 90 89 / 15%); }
-    .button:hover { color: white; background: #0d7470; }
-    .read-time { color: var(--muted); font-size: .83rem; font-weight: 650; }
-    .hero-demo { position: relative; padding: 25px; border: 1px solid rgb(21 90 89 / 14%); border-radius: 20px; background: var(--card); box-shadow: var(--shadow); transform: rotate(1deg); }
-    .demo-label { display: block; color: var(--muted); font-size: .69rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
-    .demo-input { margin: 13px 0 21px; padding: 20px 21px; border-radius: 12px; background: #f0f3ee; font-family: Georgia, serif; font-size: 1.22rem; line-height: 1.4; }
-    .demo-options { display: grid; gap: 9px; }
-    .demo-option { display: flex; gap: 12px; align-items: baseline; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; font-size: .82rem; line-height: 1.4; }
-    .demo-option b { color: var(--teal); font-size: .73rem; text-transform: uppercase; white-space: nowrap; }
-    .demo-foot { margin: 17px 2px 0; color: var(--muted); font-size: .76rem; }
+.hero {
+  max-width: 1180px; margin: 0 auto; padding: 56px 24px 24px;
+}
+.hero .eyebrow { color: var(--accent); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
+.hero h1 { font-size: clamp(2rem, 4.5vw, 3.1rem); line-height: 1.15; margin: 8px 0 14px; letter-spacing: -.02em; }
+.hero p { color: var(--muted); max-width: 680px; font-size: 1.1rem; margin: 0; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px;
+  font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--border);
+  color: var(--text); background: var(--surface);
+}
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    .content-shell { max-width: 1240px; margin: auto; padding: 72px 32px 110px; display: grid; grid-template-columns: 215px minmax(0, 790px); justify-content: space-between; gap: 70px; }
-    .side-nav { position: sticky; top: 104px; align-self: start; }
-    .side-nav p { margin: 0 0 17px; color: var(--muted); font-size: .7rem; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
-    .side-nav a { display: block; padding: 8px 0 8px 14px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; font-size: .83rem; line-height: 1.3; }
-    .side-nav a:hover, .side-nav a.active { border-color: var(--orange); color: var(--ink); font-weight: 700; }
-    .side-nav .aside-note { margin-top: 28px; padding: 15px 17px; border-radius: 10px; background: var(--teal-soft); color: #315b59; font-size: .76rem; line-height: 1.55; }
-    main { min-width: 0; }
-    section { scroll-margin-top: 100px; margin-bottom: 100px; }
-    section:last-child { margin-bottom: 0; }
-    .section-kicker { color: var(--orange); font-size: .72rem; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
-    h2 { margin: 11px 0 23px; font-size: clamp(2.25rem, 3.5vw, 3.35rem); }
-    h3 { margin: 34px 0 12px; font-size: 1.3rem; }
-    p { margin: 0 0 19px; }
-    .section-intro { color: #405458; font-size: 1.1rem; }
-    .callout { margin: 30px 0; padding: 23px 26px; border-left: 4px solid var(--orange); border-radius: 0 12px 12px 0; background: var(--orange-soft); }
-    .callout p { margin: 0; }
-    .callout strong { color: #b4512c; }
-    .quote { margin: 27px 0; padding: 24px 28px; border: 1px solid #cfdbd7; border-radius: 12px; background: white; font-family: Georgia, serif; font-size: 1.35rem; line-height: 1.5; }
-    .small-caps { color: var(--muted); font-size: .73rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+/* ---------- Layout ---------- */
+.layout {
+  max-width: 1180px; margin: 0 auto; padding: 16px 24px 80px;
+  display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 36px;
+}
+.sidebar { position: sticky; top: 76px; align-self: start; }
+.sidebar .nav-title { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin: 4px 0 10px; }
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar a {
+  display: block; padding: 8px 12px; border-radius: 10px; color: var(--muted);
+  text-decoration: none; font-size: 14.5px; line-height: 1.4; border-left: 3px solid transparent;
+}
+.sidebar a:hover { background: var(--surface-2); color: var(--text); }
+.sidebar a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+.sidebar a .num { font-family: var(--mono); font-size: 12.5px; opacity: .8; margin-right: 6px; }
 
-    .trio, .limit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 30px 0; }
-    .mini-card, .limit-card { padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
-    .mini-card .number { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--teal-soft); color: var(--teal); font-size: .75rem; font-weight: 800; }
-    .mini-card h3, .limit-card h3 { margin: 14px 0 7px; font-size: 1rem; letter-spacing: -.02em; }
-    .mini-card p, .limit-card p { margin: 0; color: var(--muted); font-size: .85rem; line-height: 1.55; }
+main { min-width: 0; }
+.module {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 40px 48px; margin-bottom: 32px;
+}
 
-    .timeline { position: relative; margin: 32px 0 0; padding: 0; list-style: none; }
-    .timeline::before { content: ""; position: absolute; left: 79px; top: 16px; bottom: 28px; width: 2px; background: var(--line); }
-    .timeline li { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 24px; position: relative; padding: 0 0 30px; }
-    .timeline li::before { content: ""; position: absolute; left: 74px; top: 9px; width: 12px; height: 12px; border: 3px solid var(--paper); border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 1px var(--orange); }
-    .timeline time { color: var(--teal); font-size: .78rem; font-weight: 850; line-height: 1.4; }
-    .timeline strong { display: block; margin-bottom: 4px; line-height: 1.3; }
-    .timeline span { color: var(--muted); font-size: .9rem; line-height: 1.55; }
+/* ---------- Markdown content ---------- */
+.md h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -.02em; margin: 0 0 18px; }
+.md h2 { font-size: 1.45rem; margin: 2.2em 0 .6em; letter-spacing: -.01em; padding-top: .2em; }
+.md h3 { font-size: 1.15rem; margin: 1.8em 0 .5em; }
+.md p, .md ul, .md ol { margin: 0 0 1em; }
+.md li { margin: .25em 0; }
+.md a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.md a:hover { text-decoration: underline; }
+.md strong { font-weight: 650; }
+.md hr { border: 0; border-top: 1px solid var(--border); margin: 2em 0; }
+.md blockquote {
+  margin: 1.2em 0; padding: 14px 20px; border-left: 4px solid var(--accent);
+  background: var(--accent-soft); border-radius: 0 12px 12px 0;
+}
+.md blockquote p:last-child { margin-bottom: 0; }
+.md code {
+  font-family: var(--mono); font-size: .88em; background: var(--surface-2);
+  padding: .12em .4em; border-radius: 6px; border: 1px solid var(--border);
+}
+.md pre {
+  background: var(--code-bg); color: var(--code-text); padding: 16px 20px; border-radius: 12px;
+  overflow-x: auto; margin: 1em 0 1.3em; font-size: 14px; line-height: 1.6;
+}
+.md pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+.table-wrap { overflow-x: auto; margin: 1em 0 1.4em; border: 1px solid var(--border); border-radius: 12px; }
+.md table { border-collapse: collapse; width: 100%; font-size: 15px; }
+.md th, .md td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.md th { background: var(--surface-2); font-weight: 600; }
+.md tr:last-child td { border-bottom: 0; }
+.md input[type="checkbox"] { accent-color: var(--accent); margin-right: 6px; }
+.md ul:has(input[type="checkbox"]) { list-style: none; padding-left: 4px; }
+.mermaid {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+  margin: 1em 0 1.4em; overflow-x: auto; text-align: center;
+}
+:root[data-theme="dark"] .mermaid { background: var(--surface-2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mermaid { background: var(--surface-2); } }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.fallback { white-space: pre-wrap; }
 
-    .flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 9px; margin: 26px 0; padding: 22px; border-radius: 12px; background: var(--teal-soft); }
-    .flow span:not(.arrow) { padding: 9px 12px; border: 1px solid #bdd3ca; border-radius: 8px; background: white; font-size: .79rem; font-weight: 750; text-align: center; }
-    .flow .arrow { color: var(--teal); font-weight: 850; }
-    .comparison { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 30px 0; }
-    .comparison > div { padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
-    .comparison > div:nth-child(2) { border-color: #a9cec0; background: #f2f8f3; }
-    .comparison h3 { margin: 0 0 15px; font-size: 1.04rem; }
-    .comparison ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: .9rem; }
-    .comparison li + li { margin-top: 9px; }
+/* ---------- Playground ---------- */
+.playground { padding: 40px 40px 44px; }
+.pg-head .eyebrow { color: var(--accent); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
+.pg-head h1 { font-size: 2rem; margin: 6px 0 10px; letter-spacing: -.02em; line-height: 1.2; }
+.pg-head p { color: var(--muted); margin: 0 0 28px; max-width: 720px; }
+.pg-card {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 26px;
+  background: var(--bg); margin-bottom: 24px;
+}
+.pg-card-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
+.pg-num {
+  flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-weight: 700;
+}
+.pg-card-head h2 { margin: 0 0 4px; font-size: 1.25rem; line-height: 1.3; }
+.pg-card-head p { margin: 0; color: var(--muted); font-size: 15px; }
 
-    .gpt-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0; }
-    .gpt-list > div { padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
-    .gpt-list b { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px; background: var(--teal); color: white; font-family: Georgia, serif; font-size: 1.5rem; }
-    .gpt-list strong { display: block; margin: 15px 0 6px; font-size: .9rem; }
-    .gpt-list span { display: block; color: var(--muted); font-size: .83rem; line-height: 1.5; }
-    .formula { margin: 25px 0; padding: 20px; border-radius: 11px; background: #e9edeb; text-align: center; font-family: Georgia, serif; font-size: 1.28rem; }
-    .formula small { display: block; margin-top: 5px; color: var(--muted); font-family: inherit; font-size: .78rem; }
+.slider-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; }
+.slider-row label { font-weight: 600; font-size: 15px; }
+.slider-row output {
+  font-family: var(--mono); font-weight: 600; min-width: 64px; text-align: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px;
+}
+.scale-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 12.5px; margin: 6px 0 20px; font-family: var(--mono); }
 
-    .prompt-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 14px; margin: 30px 0 24px; }
-    .prompt-card { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-    .prompt-card.good { border-color: #a9c9bc; }
-    .prompt-card header { padding: 13px 18px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .75rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
-    .prompt-card.good header { background: var(--teal-soft); color: var(--teal); }
-    pre { margin: 0; padding: 20px; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; line-height: 1.7; }
-    .prompt-card pre { color: #263a3c; }
-    .prompt-ingredients { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 25px; }
-    .prompt-ingredients span { padding: 6px 11px; border-radius: 999px; background: var(--teal-soft); color: var(--teal); font-size: .78rem; font-weight: 750; }
+input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 999px; outline: none;
+  background: linear-gradient(to right, var(--track-from, var(--accent)) 0%, var(--track-to, var(--accent)) var(--fill, 50%), var(--border) var(--fill, 50%));
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 3px solid var(--accent-soft); }
+#temp { --track-from: var(--cold); --track-to: var(--hot); }
 
-    .app-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 30px 0; }
-    .app-flow > div { min-height: 117px; padding: 17px; border: 1px solid #c6d8d1; border-radius: 11px; background: var(--teal-soft); }
-    .app-flow b { display: block; margin-bottom: 8px; color: var(--teal); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
-    .app-flow span { font-size: .9rem; font-weight: 650; line-height: 1.35; }
-    .app-flow .model { background: var(--teal); color: white; }
-    .app-flow .model b { color: #c8e5d8; }
-    .app-flow .result { border-color: #efc9b8; background: var(--orange-soft); }
-    .app-flow .result b { color: #b4512c; }
-    .question-table { width: 100%; border-collapse: collapse; margin: 26px 0; font-size: .9rem; }
-    .question-table th, .question-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-    .question-table th { width: 28%; color: var(--teal); }
-    .question-table tr:first-child th, .question-table tr:first-child td { border-top: 1px solid var(--line); }
-    .limit-card { border-top: 4px solid var(--orange); }
-    .limit-card h3 { margin-top: 4px; }
-    .glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 25px 0 38px; }
-    .glossary > div { padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
-    .glossary dt { color: var(--teal); font-weight: 800; }
-    .glossary dd { margin: 4px 0 0; color: var(--muted); font-size: .84rem; line-height: 1.5; }
-    .takeaways { margin: 18px 0 35px; padding-left: 23px; }
-    .takeaways li { padding-left: 5px; margin-bottom: 9px; }
-    .takeaways li::marker { color: var(--orange); font-weight: 800; }
-    details { margin: 10px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
-    summary { padding: 15px 18px; cursor: pointer; font-weight: 700; line-height: 1.4; }
-    details p { padding: 0 18px 16px; margin: 0; color: var(--muted); font-size: .9rem; }
-    .site-footer { border-top: 1px solid var(--line); background: #ebeeea; }
-    .footer-inner { max-width: 1240px; margin: auto; padding: 28px 32px; display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: .8rem; }
-    .footer-inner a { font-weight: 750; text-decoration: none; }
+.pg-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; min-width: 0; }
+.panel-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel-title.spaced { margin-top: 16px; }
+.prompt-box {
+  font-family: var(--mono); font-size: 13.5px; background: var(--code-bg); color: var(--code-text);
+  padding: 12px 14px; border-radius: 10px; white-space: pre-wrap; line-height: 1.6;
+}
+.prompt-box ins { text-decoration: none; background: rgba(46,196,192,.25); border-radius: 4px; padding: 0 2px; }
+.output-box {
+  background: var(--surface-2); border-radius: 10px; padding: 14px 16px; font-size: 15px; line-height: 1.65;
+  border-left: 4px solid var(--accent); transition: border-color .25s;
+}
+.output-box mark, .legend mark {
+  background: var(--warn-soft); color: var(--warn); border-bottom: 2px dashed var(--warn);
+  padding: 0 2px; border-radius: 3px;
+}
+.output-box .dim { color: var(--muted); font-style: italic; }
+.output-box h4 { margin: 10px 0 2px; font-size: 14.5px; }
+.output-box h4:first-child { margin-top: 0; }
+.output-box p { margin: 0 0 8px; }
+.output-box table { border-collapse: collapse; font-size: 13.5px; margin: 6px 0 8px; width: 100%; }
+.output-box th, .output-box td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; }
+.output-box th { background: var(--surface); }
+.legend { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.badge {
+  text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; padding: 2px 10px;
+  border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+}
+.mini-btn {
+  margin-left: auto; text-transform: none; letter-spacing: 0; font: inherit; font-size: 12.5px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px;
+  padding: 3px 12px; cursor: pointer;
+}
+.mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+.run-count { font-family: var(--mono); font-size: 12px; color: var(--muted); text-transform: none; letter-spacing: 0; }
 
-    @media (max-width: 980px) {
-      .hero-inner { gap: 35px; grid-template-columns: minmax(0, 1fr) minmax(290px, .85fr); }
-      .content-shell { grid-template-columns: 170px minmax(0, 1fr); gap: 35px; }
-      .top-nav { gap: 14px; }
-    }
-    @media (max-width: 720px) {
-      .header-inner { min-height: 62px; padding: 0 20px; }
-      .top-nav a:not(.nav-pill) { display: none; }
-      .hero-inner { padding: 54px 20px 60px; grid-template-columns: 1fr; min-height: auto; gap: 36px; }
-      h1 { font-size: clamp(3.1rem, 12vw, 4.2rem); }
-      .hero-demo { max-width: 530px; transform: none; }
-      .content-shell { display: block; padding: 56px 20px 80px; }
-      .side-nav { display: none; }
-      section { margin-bottom: 80px; scroll-margin-top: 80px; }
-      .trio, .limit-grid, .gpt-list { grid-template-columns: 1fr; }
-      .comparison, .prompt-grid, .glossary { grid-template-columns: 1fr; }
-      .app-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .footer-inner { padding: 25px 20px; flex-wrap: wrap; }
-    }
-    @media (max-width: 440px) {
-      .brand { font-size: .77rem; }
-      .top-nav .nav-pill { padding: 7px 10px; font-size: .78rem; }
-      .hero-actions { flex-wrap: wrap; }
-      .timeline::before { left: 65px; }
-      .timeline li { grid-template-columns: 66px minmax(0, 1fr); gap: 16px; }
-      .timeline li::before { left: 60px; }
-      .app-flow { grid-template-columns: 1fr; }
-      .question-table th { width: 33%; }
-      .question-table th, .question-table td { padding: 10px 8px; font-size: .83rem; }
-    }
-    @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } }
-  </style>
+.dist-row { display: grid; grid-template-columns: 54px 1fr 52px; align-items: center; gap: 10px; margin: 8px 0; font-family: var(--mono); font-size: 13.5px; }
+.dist-bar { height: 22px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.dist-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cold), var(--accent)); transition: width .25s ease; }
+.dist-row.low .dist-fill { background: linear-gradient(90deg, var(--accent), var(--hot)); }
+.dist-row span:last-child { text-align: right; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; }
+.meter { margin-top: 14px; }
+.meter-label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+.meter-track { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.meter-fill { height: 100%; border-radius: 999px; transition: width .3s ease, background .3s; }
+
+.takeaway {
+  margin-top: 16px; padding: 12px 16px; border-radius: 10px; font-size: 14.5px;
+  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.takeaway strong { color: var(--accent); }
+
+/* Context window */
+.token-stream { display: flex; flex-wrap: wrap; gap: 6px 5px; padding: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.tok {
+  position: relative; font-family: var(--mono); font-size: 14px; padding: 6px 9px 16px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-2); transition: all .2s ease; line-height: 1.2;
+  min-width: 26px; text-align: center;
+}
+.tok .w { position: absolute; left: 0; right: 0; bottom: 2px; font-size: 9.5px; color: var(--muted); }
+.tok.in { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); color: var(--text); }
+.tok.out { opacity: .28; filter: grayscale(1); text-decoration: line-through; text-decoration-color: var(--muted); }
+.tok.out .w { visibility: hidden; }
+.tok.focus { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+.tok.focus .w { color: rgba(255,255,255,.85); }
+.tok.future { border-style: dashed; color: var(--muted); background: transparent; opacity: .7; }
+.ctx-info { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+.status { padding: 10px 12px; border-radius: 10px; font-size: 14.5px; margin-bottom: 8px; }
+.status.ok { background: var(--ok-soft); color: var(--ok); }
+.status.bad { background: var(--warn-soft); color: var(--warn); }
+.top-list .dist-row { grid-template-columns: 92px 1fr 48px; }
+
+/* Specificity */
+.ticks { display: flex; justify-content: space-between; margin: 8px 0 20px; }
+.ticks button {
+  font: inherit; font-size: 13px; font-weight: 600; background: none; border: 0; color: var(--muted);
+  cursor: pointer; padding: 2px 4px; border-radius: 6px;
+}
+.ticks button.on { color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.chip {
+  font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); transition: all .25s;
+}
+.chip.on { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.chip::before { content: "○ "; }
+.chip.on::before { content: "✓ "; }
+.spec-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px; }
+.fade-in { animation: fade .3s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+footer { text-align: center; color: var(--muted); font-size: 14px; padding: 10px 24px 40px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; gap: 16px; }
+  .sidebar { position: sticky; top: 57px; z-index: 40; background: var(--bg); padding: 8px 0; margin: 0 -24px; padding-left: 24px; padding-right: 24px; border-bottom: 1px solid var(--border); }
+  .sidebar .nav-title { display: none; }
+  .sidebar nav { flex-direction: row; overflow-x: auto; gap: 6px; scrollbar-width: none; }
+  .sidebar a { white-space: nowrap; border-left: 0; padding: 6px 12px; }
+  .pg-grid, .spec-grid, .ctx-info { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .hero { padding: 36px 16px 16px; }
+  .layout { padding: 12px 16px 60px; }
+  .sidebar { margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .module, .playground { padding: 26px 18px; }
+  .pg-card { padding: 18px 14px; }
+  .md h1, .pg-head h1 { font-size: 1.6rem; }
+  .slider-row { grid-template-columns: 1fr auto; }
+  .slider-row label { grid-column: 1 / -1; }
+  .topbar { padding: 10px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+}
+</style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <div class="progress" id="progress" aria-hidden="true"></div>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="#top" aria-label="promting, back to top"><span class="brand-mark">01</span> promting / field notes</a>
-      <nav class="top-nav" aria-label="Quick navigation">
-        <a href="#history">History</a>
-        <a href="#attention">Attention</a>
-        <a href="#prompt">The prompt</a>
-        <a class="nav-pill" href="#recap">Key ideas ↗</a>
-      </nav>
-    </div>
-  </header>
 
-  <div class="hero" id="top">
-    <div class="hero-inner">
-      <div>
-        <span class="eyebrow">Chapter 01 · Approximately 10 minutes</span>
-        <h1>Introduction to prompt engineering.</h1>
-        <p class="hero-lead">A language model continues the information it receives. Prompt engineering shapes that continuation into something useful, relevant, and reliable.</p>
-        <div class="hero-actions">
-          <a class="button" href="#main">Start reading <span aria-hidden="true">↓</span></a>
-          <span class="read-time">History · Attention · Transformers · Prompts</span>
-        </div>
-      </div>
-      <div class="hero-demo" aria-label="Illustration of three possible continuations for the same opening sentence">
-        <span class="demo-label">One opening, many continuations</span>
-        <div class="demo-input">“The most important discovery of the experiment was…”</div>
-        <div class="demo-options">
-          <div class="demo-option"><b>Report</b><span>…a measurable change in the observed samples.</span></div>
-          <div class="demo-option"><b>Story</b><span>…hidden behind the locked laboratory door.</span></div>
-          <div class="demo-option"><b>Summary</b><span>…that the first hypothesis did not hold.</span></div>
-        </div>
-        <p class="demo-foot">Illustrative examples · Context changes what comes next.</p>
-      </div>
-    </div>
+<header class="topbar">
+  <a class="brand" href="#top"><span class="brand-logo">PE</span><span>Prompt Engineering &amp; LLMs</span></a>
+  <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+</header>
+
+<div class="hero" id="top">
+  <div class="eyebrow">Course notes · Modules 01–04</div>
+  <h1>Prompt Engineering &amp; Large Language Models</h1>
+  <p>From attention and transformers to chat models and full LLM applications — with a live playground to build intuition for temperature, context, and prompt design.</p>
+  <div class="hero-cta">
+    <a class="btn primary" href="#m01">Start reading →</a>
+    <a class="btn" href="#playground">🎛️ Open the Live LLM Playground</a>
   </div>
+</div>
 
-  <div class="content-shell">
-    <aside class="side-nav" aria-label="On this page">
-      <p>On this page</p>
-      <nav>
-        <a href="#idea">The central question</a>
-        <a href="#history">How we got here</a>
-        <a href="#attention">The attention bottleneck</a>
-        <a href="#transformer">Transformer and GPT</a>
-        <a href="#prompt">Designing a prompt</a>
-        <a href="#application">From prompt to application</a>
-        <a href="#limits">Three limitations</a>
-        <a href="#recap">Recap and questions</a>
-      </nav>
-      <div class="aside-note">A short guide to the ideas behind practical prompting.</div>
-    </aside>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">Contents</div>
+    <nav id="toc">
+      <a href="#m01"><span class="num">01</span>Introduction</a>
+      <a href="#m02"><span class="num">02</span>Understanding LLMs</a>
+      <a href="#playground"><span class="num">▶</span>Live LLM Playground</a>
+      <a href="#m03"><span class="num">03</span>Chat Models &amp; Feedback</a>
+      <a href="#m04"><span class="num">04</span>Designing Applications</a>
+    </nav>
+  </aside>
 
-    <main id="main">
-      <section id="idea" aria-labelledby="idea-title">
-        <span class="section-kicker">The starting point</span>
-        <h2 id="idea-title">The central question</h2>
-        <p class="section-intro">What makes a model's next words useful for a particular task?</p>
-        <div class="quote">“The most important discovery of the experiment was…”</div>
-        <p>The same opening can lead to a scientific report, a dramatic story, or a short summary. The words surrounding the request influence which kind of continuation is likely.</p>
-        <p><strong>Prompt engineering</strong> means designing instructions, examples, and context so that the output serves a purpose. In an application, it also includes deciding what information to retrieve, how to structure a conversation, and how to use the result.</p>
-        <div class="trio" aria-label="Three parts of prompt engineering">
-          <div class="mini-card"><span class="number">01</span><h3>Instructions</h3><p>Describe the task, audience, and desired behavior.</p></div>
-          <div class="mini-card"><span class="number">02</span><h3>Context</h3><p>Provide the relevant facts, examples, and conversation history.</p></div>
-          <div class="mini-card"><span class="number">03</span><h3>Output</h3><p>Specify a useful format and plan how to check the result.</p></div>
-        </div>
-      </section>
+  <main>
 
-      <section id="history" aria-labelledby="history-title">
-        <span class="section-kicker">01 / Origins</span>
-        <h2 id="history-title">How did we get here?</h2>
-        <p class="section-intro">Modern assistants grew out of successive ways to represent and use context.</p>
-        <ol class="timeline">
-          <li><time>1940s+</time><div><strong>Statistical language models</strong><span>Markov-style approaches predict text from a limited preceding context.</span></div></li>
-          <li><time>2014</time><div><strong>Sequence-to-sequence models</strong><span>An encoder and decoder transform one sequence into another, such as a translation.</span></div></li>
-          <li><time>2015</time><div><strong>Attention in neural sequence models</strong><span>The decoder can consult relevant parts of its input instead of relying on one compressed summary.</span></div></li>
-          <li><time>2017</time><div><strong>The Transformer</strong><span>Attention becomes the central mechanism for relating positions in a sequence.</span></div></li>
-          <li><time>2018</time><div><strong>GPT</strong><span>A transformer-based text generator is broadly pre-trained and then adapted to useful tasks.</span></div></li>
-          <li><time>GPT-2 → 3 → 4</time><div><strong>More capable models</strong><span>Prompting becomes a practical way to perform tasks without training a new model for each one.</span></div></li>
-        </ol>
-        <div class="callout"><p><strong>Remember:</strong> This was a move from simple prediction with limited context to much more powerful context-sensitive prediction.</p></div>
-      </section>
+<!-- ===================== MODULE 01 ===================== -->
+<section class="module" id="m01"><div class="md" data-src="md01"></div></section>
+<script type="text/markdown" id="md01">
+# 01 · Introduction to Prompt Engineering
 
-      <section id="attention" aria-labelledby="attention-title">
-        <span class="section-kicker">02 / The bottleneck</span>
-        <h2 id="attention-title">A sentence is not a single vector</h2>
-        <p class="section-intro">Early translation systems tried to squeeze an entire input into one fixed-size representation.</p>
-        <p>An <strong>encoder</strong> reads the source sentence and compresses it into a representation sometimes called a <em>thought vector</em>. A <strong>decoder</strong> then generates the translated sentence one token at a time.</p>
-        <div class="flow" aria-label="Sequence-to-sequence process">
-          <span>Source sentence</span><span class="arrow" aria-hidden="true">→</span><span>Encoder</span><span class="arrow" aria-hidden="true">→</span><span>Compressed vector</span><span class="arrow" aria-hidden="true">→</span><span>Decoder</span><span class="arrow" aria-hidden="true">→</span><span>Translation</span>
-        </div>
-        <p>That can work for short input. But a paragraph may contain names, qualifications, and relationships that cannot all fit cleanly into one small summary. Important details can be lost before the decoder finishes.</p>
-        <h3>Attention changes the picture</h3>
-        <p>With attention, the decoder can consult multiple representations of the source words. At each output step, it gives more weight to the parts that matter for the next token.</p>
-        <div class="comparison">
-          <div><h3>Without attention</h3><ul><li>One summary carries most input information.</li><li>Details may disappear in long sequences.</li><li>The fixed-size representation creates a bottleneck.</li></ul></div>
-          <div><h3>With attention</h3><ul><li>The decoder consults a collection of source representations.</li><li>Different source words can matter at different steps.</li><li>Relevant context is easier to reach.</li></ul></div>
-        </div>
-        <div class="callout"><p><strong>Intuition:</strong> Not every input word matters equally at every moment.</p></div>
-      </section>
+> **Big idea:** A language model produces a continuation of the information it receives. Prompt engineering is the practice of making that continuation useful, relevant, and reliable.
 
-      <section id="transformer" aria-labelledby="transformer-title">
-        <span class="section-kicker">03 / The architecture</span>
-        <h2 id="transformer-title">Attention becomes the architecture</h2>
-        <p class="section-intro">The 2017 transformer uses attention to connect information between token positions, without relying on recurrent processing through a sequence.</p>
-        <p>This made training on large text collections more practical and let models represent rich relationships across text.</p>
-        <h3>What does GPT mean?</h3>
-        <div class="gpt-list" aria-label="Meaning of GPT">
-          <div><b>G</b><strong>Generative</strong><span>Produces new content.</span></div>
-          <div><b>P</b><strong>Pre-trained</strong><span>Learns broadly from large datasets before adapting to particular uses.</span></div>
-          <div><b>T</b><strong>Transformer</strong><span>Uses transformer layers, including attention, to process context.</span></div>
-        </div>
-        <p>GPT-style text generation is usually <strong>autoregressive</strong>: the model estimates a distribution for the next token, selects one, appends it to the sequence, and repeats.</p>
-        <div class="formula">P(t<sub>n+1</sub> | t<sub>1</sub>, t<sub>2</sub>, …, t<sub>n</sub>)<small>Probability of a next token given the tokens so far</small></div>
-        <p>That repeated operation can yield answers, explanations, code, translations, and stories because the model has learned many forms of structured text.</p>
-      </section>
+**Reading time:** ~10 minutes · **Focus:** history, attention, transformers, and the role of a prompt
 
-      <section id="prompt" aria-labelledby="prompt-title">
-        <span class="section-kicker">04 / In practice</span>
-        <h2 id="prompt-title">A prompt is more than a question</h2>
-        <p class="section-intro">Two requests can ask for the same topic while giving the model very different guidance.</p>
-        <div class="prompt-grid">
-          <div class="prompt-card"><header>Vague request</header><pre>Explain transformers.</pre></div>
-          <div class="prompt-card good"><header>Designed request</header><pre>Explain the transformer architecture to first-year computer science students.
+---
+
+## The central question
+
+Imagine giving a language model the words:
+
+> *The most important discovery of the experiment was…*
+
+Many continuations are possible. The model could finish a scientific report, invent a dramatic story, or produce a short summary. **The words surrounding the request determine which kind of continuation is likely.**
+
+That is the starting point of **prompt engineering**: designing the instructions, examples, and context so that the model's output serves a particular purpose.
+
+It is not simply the art of asking a clever question. In an application, prompt engineering also means deciding **what information to retrieve, how to structure a conversation, and what to do with the result**.
+
+## 1. How did we get here?
+
+The path from early language models to conversational assistants can be understood as a sequence of solutions to information-processing problems.
+
+| Era | Key development | What changed? |
+|:---|:---|:---|
+| **1940s onward** | Statistical language models and Markov-style approaches | Predict text from a limited preceding context. |
+| **2014** | Sequence-to-sequence (**seq2seq**) models | Translate or transform one sequence into another with an encoder and decoder. |
+| **2015** | Attention in neural sequence models | Allow a decoder to access relevant portions of the input rather than relying on one compressed representation. |
+| **2017** | The **Transformer** architecture | Use attention as the central mechanism for representing relationships within a sequence. |
+| **2018** | **GPT**: Generative Pre-trained Transformer | Pretrain a transformer-based text generator, then adapt it to useful tasks. |
+| **GPT-2 → GPT-3 → GPT-4** | Increasingly capable language models | Prompting becomes an important way to perform tasks without training a new model for each one. |
+
+> **Remember:** The transformation was not from “predicting words” to an entirely different principle. It was from **simple predictions with limited context** to **powerful context-sensitive prediction**.
+
+## 2. The original challenge: a sentence is not a single vector
+
+An early **seq2seq translation model** had two main components:
+
+1. An **encoder** reads the source sentence and compresses it into a fixed-size representation, sometimes called a *thought vector*.
+2. A **decoder** uses that representation to generate the translated sentence, one token after another.
+
+```text
+Source sentence → Encoder → [compressed representation] → Decoder → Translation
+```
+
+This works reasonably well for short input. But try compressing an entire paragraph into one small representation while preserving every name, qualification, and grammatical relationship.
+
+**The bottleneck:** important details can be lost before the decoder has finished its job.
+
+### Attention changes the picture
+
+Instead of using only the final compressed vector, the decoder can consult multiple representations of the source words. At each output step, it places different *weights* on different parts of the input.
+
+For example, while translating **“The scientist opened the laboratory door,”** the decoder can concentrate on the source words relevant to the next translated word.
+
+| Without attention | With attention |
+|---|---|
+| One summary must carry most input information. | The decoder can consult a collection of source representations. |
+| Details can disappear in long sequences. | Different source words can become important at different output steps. |
+| A narrow information bottleneck. | More flexible access to context. |
+
+The idea is surprisingly intuitive: **not every input word matters equally at every moment**.
+
+## 3. The transformer: attention becomes the architecture
+
+The 2017 paper *Attention Is All You Need* introduced the transformer. Instead of relying on recurrent processing to move through a sequence, the transformer uses attention to connect information between token positions.
+
+This design made training on large text collections more practical and allowed models to represent rich relationships across text.
+
+### What does GPT mean?
+
+| Letter | Meaning | In plain language |
+|:--:|---|---|
+| **G** | Generative | Produces new content. |
+| **P** | Pre-trained | Learns broadly from large datasets before being adapted for particular uses. |
+| **T** | Transformer | Uses transformer layers, including attention, to process context. |
+
+GPT-style text generation is usually **autoregressive**. Given tokens $t_1, \ldots, t_n$, the model estimates the distribution of the next token:
+
+$$P(t_{n+1}\mid t_1,t_2,\ldots,t_n).$$
+
+It selects one token, appends it to the sequence, and repeats.
+
+This simple-looking operation can produce answers, explanations, code, translations, and stories because the model has learned many forms of structured text.
+
+## 4. A prompt is more than a question
+
+Consider two requests for the same task.
+
+**Vague:**
+
+```text
+Explain transformers.
+```
+
+**Designed:**
+
+```text
+Explain the transformer architecture to first-year computer science students.
 Begin with the problem faced by seq2seq models, then introduce attention.
 Use one simple analogy, one comparison table, and no more than 300 words.
-Define any technical term before using it.</pre></div>
-        </div>
-        <p>The second request makes four choices explicit:</p>
-        <div class="prompt-ingredients" aria-label="Parts of the designed prompt"><span>Audience</span><span>Scope and sequence</span><span>Presentation format</span><span>Constraints</span></div>
-        <p>Instead of hoping for a good completion, it designs the conditions for one.</p>
-      </section>
+Define any technical term before using it.
+```
 
-      <section id="application" aria-labelledby="application-title">
-        <span class="section-kicker">05 / Beyond the prompt</span>
-        <h2 id="application-title">From a prompt to an application</h2>
-        <p class="section-intro">A useful model interaction often has a third participant: the application that prepares the input and handles the output.</p>
-        <div class="app-flow" aria-label="Application flow from user problem to useful result">
-          <div><b>01 · User</b><span>Starts with a problem</span></div>
-          <div><b>02 · Application</b><span>Prepares instructions and relevant context</span></div>
-          <div class="model"><b>03 · Model</b><span>Generates an output</span></div>
-          <div><b>04 · Application</b><span>Checks, formats, or uses the output</span></div>
-          <div class="result"><b>05 · Result</b><span>Returns something useful to the user</span></div>
-        </div>
-        <p>The application may retrieve documents, keep conversation history, validate an answer, format it, or call an external tool. That makes prompt engineering closely connected to application design.</p>
-        <h3>Where the engineering happens</h3>
-        <table class="question-table">
-          <tbody>
-            <tr><th scope="row">Task</th><td>What is the user trying to accomplish?</td></tr>
-            <tr><th scope="row">Instructions</th><td>What behavior, style, and format are needed?</td></tr>
-            <tr><th scope="row">Context</th><td>What facts or documents must the model receive?</td></tr>
-            <tr><th scope="row">Interaction</th><td>Is this one response or a longer conversation?</td></tr>
-            <tr><th scope="row">Output handling</th><td>How will the result be checked, displayed, or used?</td></tr>
-          </tbody>
-        </table>
-      </section>
+The second prompt does four things the first does not:
 
-      <section id="limits" aria-labelledby="limits-title">
-        <span class="section-kicker">06 / Reality check</span>
-        <h2 id="limits-title">Three limitations worth remembering</h2>
-        <div class="limit-grid">
-          <div class="limit-card"><h3>Not a search engine</h3><p>A model can produce plausible text without retrieving or verifying a source.</p></div>
-          <div class="limit-card"><h3>Finite context</h3><p>It only processes content available within its supported context limit.</p></div>
-          <div class="limit-card"><h3>Fluency is not accuracy</h3><p>A well-written answer may still contain factual or logical errors.</p></div>
-        </div>
-        <p>Choosing the right information and checking important results are part of the engineering work.</p>
-      </section>
+- states the **audience**;
+- supplies the **scope and sequence**;
+- specifies the **presentation format**;
+- sets **constraints** on length and terminology.
 
-      <section id="recap" aria-labelledby="recap-title">
-        <span class="section-kicker">At a glance</span>
-        <h2 id="recap-title">Keep these ideas with you</h2>
-        <dl class="glossary">
-          <div><dt>Language model</dt><dd>Models patterns in sequences and generates plausible continuations.</dd></div>
-          <div><dt>Seq2seq</dt><dd>An encoder–decoder approach to converting one sequence into another.</dd></div>
-          <div><dt>Attention</dt><dd>Weights information from relevant token positions.</dd></div>
-          <div><dt>Transformer</dt><dd>A neural architecture built around attention and layered representations.</dd></div>
-          <div><dt>GPT</dt><dd>A generative, pre-trained model based on a transformer.</dd></div>
-          <div><dt>Prompt engineering</dt><dd>Designs instructions, context, and interactions for useful model behavior.</dd></div>
-        </dl>
-        <h3>Five takeaways</h3>
-        <ol class="takeaways">
-          <li>Modern language models grew out of a long history of sequence prediction.</li>
-          <li>Attention addresses the limits of compressing input into a single fixed representation.</li>
-          <li>Transformers made attention central to processing language.</li>
-          <li>GPT-style models generate text by repeatedly predicting the next token.</li>
-          <li>A useful prompt connects a user's goal to the kind of output the model should produce.</li>
-        </ol>
-        <h3>Check your understanding</h3>
-        <details><summary>Why was one “thought vector” problematic for a long input?</summary><p>It had to compress the whole input into one fixed-size representation, so names, qualifications, and other important details could be lost.</p></details>
-        <details><summary>What changes when the decoder can use attention?</summary><p>At each generation step, it can consult multiple source representations and give more weight to the parts relevant to the next token.</p></details>
-        <details><summary>What is missing from “Explain transformers”?</summary><p>It does not identify the audience, the scope and sequence, the output format, or useful constraints.</p></details>
-      </section>
-    </main>
+This is the difference between hoping for a good completion and **designing the conditions for one**.
+
+## 5. From a prompt to an application
+
+When someone uses a simple chatbot, it may seem as though there are only two participants: a person and a model. In a real application, there is often a third participant: **the application itself**.
+
+```mermaid
+flowchart LR
+    U[User's problem] --> A[Application]
+    A --> P[Instructions + relevant context]
+    P --> M[Language model]
+    M --> O[Generated output]
+    O --> A
+    A --> R[Useful result for the user]
+```
+
+The application may retrieve supporting documents, maintain conversation history, validate the answer, format it, or call an external tool. Prompt engineering is therefore closely connected to **application design**.
+
+### Where the engineering happens
+
+| Layer | A useful design question |
+|---|---|
+| **Task** | What exactly is the user trying to accomplish? |
+| **Instructions** | What behavior, style, and format are needed? |
+| **Context** | What facts or documents must the model receive? |
+| **Interaction** | Is this a single response or a longer conversation? |
+| **Output handling** | How will the result be checked, displayed, or used? |
+
+## 6. The three limitations worth remembering
+
+**A language model is not automatically a search engine.** It can produce plausible text without having retrieved or verified a source.
+
+**Context is finite.** A model processes only the content available to it within its supported context limit. This makes selecting and compressing information an engineering decision.
+
+**Fluent does not mean correct.** A well-written explanation can still contain factual or logical errors. Verification matters most when errors have consequences.
+
+These limitations lead naturally to later topics: *tokenization, sampling, chat alignment, retrieval-augmented generation, and tool use*.
+
+---
+
+## At a glance
+
+| Concept | One-sentence definition |
+|---|---|
+| **Language model** | A system that models patterns in sequences and can generate plausible continuations. |
+| **Seq2seq** | An encoder–decoder approach for converting one sequence into another. |
+| **Attention** | A mechanism for weighting information from relevant token positions. |
+| **Transformer** | A neural architecture built around attention and layered representations. |
+| **GPT** | A generative, pre-trained model based on the transformer architecture. |
+| **Prompt engineering** | Deliberately designing instructions, context, and interactions to produce useful model behavior. |
+
+### Five takeaways
+
+1. Modern language models grew out of a long history of sequence prediction.
+2. Attention addresses the limits of compressing input into a single fixed representation.
+3. Transformers made attention central to processing language.
+4. GPT-style models generate text by repeatedly predicting the next token.
+5. A useful prompt connects a **user's goal** to the **kind of output** the model should produce.
+
+### Check your understanding
+
+- Why was a single *thought vector* problematic for long input sequences?
+- What changes when the decoder can use attention?
+- Which parts of a well-designed prompt are missing from “Explain transformers”?
+
+**Next:** [02 · Understanding Language Models](#m02)
+</script>
+
+<!-- ===================== MODULE 02 ===================== -->
+<section class="module" id="m02"><div class="md" data-src="md02"></div></section>
+<script type="text/markdown" id="md02">
+# 02 · Understanding How Language Models Work
+
+> **Big idea:** To use a language model well, understand what it actually processes: **tokens, probability distributions, and context**. Many prompting mistakes become much easier to diagnose once these three ideas are clear.
+
+**Reading time:** ~17 minutes · **Focus:** tokenization, generation, temperature, attention, and hallucinations
+
+---
+
+## The whole mechanism in one picture
+
+A simplified GPT-style generation loop looks like this:
+
+```mermaid
+flowchart LR
+    T[Input text] --> K[Tokenizer]
+    K --> E[Token representations]
+    E --> X[Causal transformer]
+    X --> L[Scores for next token]
+    L --> S[Select or sample a token]
+    S --> A[Append token to context]
+    A --> X
+```
+
+Nothing in this loop directly guarantees that a statement is true. The model learns statistical and semantic patterns in its training process, then uses those patterns to produce the next token under the current context.
+
+## 1. A language model continues a sequence
+
+A base language model can be viewed as a **text-completion engine**. Given:
+
+> *Yesterday, my TV stopped working. Now I can't turn it on at…*
+
+one very natural continuation is **“all.”** The completed sentence is grammatical because the model has learned what kinds of words tend to occur together.
+
+The continuation after that is less predictable. The text might become a personal story, a request for help, or a troubleshooting guide.
+
+**Why this matters:** the prompt does not merely specify a topic. It also creates an expectation about the **type of document or response** that should follow.
+
+Modern assistant systems can add instructions, reasoning processes, retrieval, and tools around this generation mechanism. The underlying next-token perspective is still a useful starting point.
+
+## 2. Tokens: the model's units of text
+
+People see words and sentences. Text-based language models operate on **token IDs**.
+
+A tokenizer converts text into pieces that may represent whole words, word fragments, punctuation, or whitespace-attached units. The exact segmentation depends on the tokenizer.
+
+| Human-readable text | Possible tokenization pattern |
+|---|---|
+| `cat` | One token |
+| `unbelievable` | Several subword tokens |
+| `.` or `,` | Often an individual punctuation token |
+| Uncommon spelling | Often broken into more pieces |
+| A change of capitalization or spacing | Can change token boundaries |
+
+*These are illustrations, not tokenizations guaranteed by a particular model.*
+
+### Three practical consequences
+
+**1. Character-level tasks can be surprisingly difficult.** Anagrams, spelling puzzles, and exact letter counts are not always easy for a system trained on subword units.
+
+**2. Formatting has a cost.** Code fences, Markdown punctuation, repeated examples, and prior conversation turns all occupy space in the context.
+
+**3. Different languages may use different numbers of tokens.** A 500-word passage is not necessarily 500 tokens, and its token count can differ considerably between languages and tokenizers.
+
+> **Try it:** Compare the token counts of a short English paragraph, its Polish translation, and the same text with unusual spacing. The number of words may stay similar while the number of tokens changes.
+
+## 3. The context window is finite
+
+The **context window** is the amount of tokenized information a model can consider in a request. It may contain:
+
+- system-level and application instructions;
+- the current user message;
+- earlier conversation turns;
+- documents, examples, and retrieved passages;
+- sometimes space reserved for the generated output.
+
+The slide material uses **GPT-3.5 at roughly 4,000 tokens** and **GPT-4 Turbo at 128,000 tokens** as historical examples. Those figures are **not universal or current limits for all models**.
+
+A long prompt is not automatically a good prompt. Extra information can make the relevant facts harder to identify.
+
+### A context-budget mindset
+
+| Include first | Include only if relevant | Usually remove |
+|---|---|---|
+| The task and desired result | Representative examples | Repeated instructions |
+| Essential facts and constraints | Earlier conversation details | Unrelated background |
+| Source excerpts needed for accuracy | Style demonstrations | Redundant or low-value passages |
+
+In long-running conversations, an application may shorten old history or summarize it. Whether this happens depends on the application rather than on an automatic rule shared by every model.
+
+## 4. Autoregression: one token at a time
+
+**Autoregressive generation** means that the next token is conditioned on the preceding sequence.
+
+```text
+The cat sat on the → [mat] → [.] → [end]
+```
+
+The model does not first write an entire finished paragraph and then reveal it. Each new token becomes part of the context for subsequent tokens.
+
+This has two consequences:
+
+- **Early choices matter.** A poor beginning may steer later sentences toward an unhelpful direction.
+- **Repetition can reinforce itself.** Once a repetitive pattern appears, subsequent tokens may continue it.
+
+A single forward generation pass cannot directly edit already-emitted tokens. However, a surrounding application can make additional model calls, request revisions, or use tools to check and rewrite a result.
+
+## 5. How is the next token chosen?
+
+For any position, the model produces numerical scores—**logits**—for candidate tokens. A **softmax** function converts these scores into probabilities.
+
+For a deliberately simplified example:
+
+> *The cat sat on the…*
+
+| Possible next token | Illustrative probability |
+|---|---:|
+| `mat` | 0.52 |
+| `sofa` | 0.28 |
+| `floor` | 0.15 |
+| `moon` | 0.05 |
+
+Two common selection strategies are:
+
+- **Greedy decoding:** select the highest-scoring token at each step.
+- **Sampling:** randomly select a token according to its probability, allowing different outputs from the same prompt.
+
+The probabilities in the example are invented for explanation, not measured from a particular model.
+
+### Temperature: reshaping probabilities
+
+A common mathematical description is
+
+$$p_i(T)=\frac{\exp(z_i/T)}{\sum_j\exp(z_j/T)},$$
+
+where $z_i$ is the logit of token $i$ and $T>0$ is the temperature.
+
+- **Lower temperature:** concentrates probability on already likely candidates.
+- **Higher temperature:** makes less likely candidates easier to sample.
+- **Near zero:** approaches greedy selection in many implementations.
+
+| Task | Typical teaching heuristic | Trade-off |
+|---|---|---|
+| Factual extraction, concise summaries | **0.0–0.3** | More stable phrasing; not a guarantee of truth. |
+| Ordinary writing and dialogue | **0.5–0.8** | More variation in wording and tone. |
+| Creative ideas and storytelling | **0.9–1.3** | More variety, with greater risk of incoherence. |
+| Experimental generation | **Above 1.3** | Highly variable and often unstable. |
+
+These ranges are **illustrative guidelines from the teaching material**. Available settings, defaults, and their effects vary across systems.
+
+> **Important distinction:** Low temperature makes an answer **more predictable**, not necessarily **more accurate**.
+
+## 6. Transformers and self-attention
+
+A transformer represents the text as a sequence of vectors and updates those vectors through multiple layers. One of its central mechanisms is **self-attention**.
+
+For intuition, think of three pieces of information:
+
+| Component | Informal question |
+|---|---|
+| **Query (Q)** | What information am I looking for? |
+| **Key (K)** | What information could this token help identify? |
+| **Value (V)** | What information should be passed along? |
+
+A token can compare its **query** with the **keys** of other relevant tokens and combine their **values** using attention weights.
+
+Consider:
+
+> *Susan entered the room. She placed her notes on the table.*
+
+When processing “She,” a useful representation may draw strongly on the earlier mention of “Susan.” Attention provides a way to connect those positions.
+
+### Why the model cannot simply look ahead
+
+In a **causal decoder**, attention uses a mask so that a token position cannot access future token positions during ordinary autoregressive prediction.
+
+```text
+Position:       1    2    3    4
+Can attend to:
+1               ✓    ·    ·    ·
+2               ✓    ✓    ·    ·
+3               ✓    ✓    ✓    ·
+4               ✓    ✓    ✓    ✓
+```
+
+The triangular pattern is the source of the terms **causal masking** and **left-to-right generation**.
+
+The network also processes information through successive layers, building increasingly contextual representations. Calling each position a “mini-brain” may help as a metaphor, but in engineering terms these are vector operations in shared neural-network layers, not independent little agents.
+
+## 7. Why reading and writing have different costs
+
+When processing a supplied prompt, many token positions can be computed **in parallel**. This phase is often called *prefill*.
+
+When generating output, each newly produced token depends on the earlier tokens. This phase is **sequential**, even though individual steps can use highly parallel numerical operations.
+
+| Phase | Typical character |
+|---|---|
+| **Prompt processing** | Parallel processing of the available input sequence. |
+| **Output generation** | Repeated next-token steps, with new text appended at each step. |
+
+This distinction helps explain why both a very long input and a very long generated answer can affect latency and cost.
+
+## 8. Hallucinations: when fluent text is wrong
+
+A **hallucination** is an output that contains invented, unsupported, or false information presented as if it were reliable.
+
+| Type | Example failure |
+|---|---|
+| **Factual** | A wrong date, person, measurement, or event. |
+| **Logical** | A conclusion contradicts the evidence in the prompt. |
+| **Structural** | A fabricated citation, URL, document title, or API endpoint. |
+
+A particularly dangerous case is a plausible-looking reference: the model can generate a URL that has the *shape* of a genuine source without the source existing.
+
+### Better defenses than simply asking for confidence
+
+1. Supply relevant, trustworthy **source material**.
+2. State what the model should do when the source **does not contain the answer**.
+3. Use retrieval or tools when the task depends on **current or private facts**.
+4. Verify critical values, links, citations, and calculations **outside the language model's prose**.
+5. Prefer smaller, testable subtasks over one ambiguous, oversized request.
+
+Even a cautious, well-aligned chat model can make errors. Expressed confidence is not a substitute for evidence.
+
+---
+
+## Quick comparison
+
+| Term | Meaning | Why you care |
+|---|---|---|
+| Tokenization | Turning text into token IDs | Affects formatting, costs, and exact-text tasks. |
+| Context window | Model's supported amount of input/context | Makes selecting information essential. |
+| Autoregression | Generating the next token from earlier ones | Explains sequential output and cascading mistakes. |
+| Logits and softmax | Turning scores into a probability distribution | Explains how candidate tokens are ranked. |
+| Temperature | Controls the sharpness of that distribution | Balances variation with predictability. |
+| Self-attention | Context-dependent information exchange | Connects related words and ideas. |
+| Causal masking | Prevents access to future positions in generation | Preserves left-to-right prediction. |
+| Hallucination | Plausible but unsupported or false content | Requires grounding and verification. |
+
+### What to remember
+
+**Tokens are not words. Probabilities are not facts. Fluency is not verification.** With these distinctions in mind, prompt engineering becomes much less mysterious.
+
+### Check your understanding
+
+1. Why might a simple character-counting task be difficult for a language model?
+2. How do greedy selection and sampling differ?
+3. Why does lower temperature *not* guarantee factual accuracy?
+4. What information does causal masking hide from a token position?
+5. Which kind of hallucination can produce a plausible but nonexistent URL?
+
+**Next:** [03 · Chat Models and Human Feedback](#m03)
+</script>
+
+<!-- ===================== LIVE LLM PLAYGROUND ===================== -->
+<section class="module playground" id="playground">
+  <div class="pg-head">
+    <div class="eyebrow">Interactive · Live LLM Playground</div>
+    <h1>Live LLM Playground</h1>
+    <p>Drag the sliders to see three ideas from Modules 01 and 02 in action: temperature, the context window, and prompt specificity. All outputs are hand-written teaching illustrations, not live model calls — but they behave the way real models tend to.</p>
   </div>
 
-  <footer class="site-footer">
-    <div class="footer-inner"><span>promting · Chapter 01: Introduction to Prompt Engineering</span><a href="#top">Back to top ↑</a></div>
-  </footer>
-  <script>
-    const progress = document.getElementById('progress');
-    const sectionLinks = [...document.querySelectorAll('.side-nav a')];
-    const sections = sectionLinks.map(link => document.querySelector(link.getAttribute('href')));
+  <!-- 1. Temperature -->
+  <div class="pg-card">
+    <div class="pg-card-head">
+      <span class="pg-num">1</span>
+      <div>
+        <h2>Temperature slider</h2>
+        <p>Temperature reshapes the next-token probability distribution. Low values almost always pick the safest token; high values let unlikely tokens through — more variety, more risk.</p>
+      </div>
+    </div>
 
-    function updateReadingState() {
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.width = `${maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0}%`;
-      let current = 0;
-      sections.forEach((section, index) => {
-        if (section.getBoundingClientRect().top <= 150) current = index;
-      });
-      sectionLinks.forEach((link, index) => link.classList.toggle('active', index === current));
+    <div class="slider-row">
+      <label for="temp">Temperature</label>
+      <input type="range" id="temp" min="0" max="1" step="0.05" value="0" aria-describedby="temp-note">
+      <output id="temp-val" for="temp">0.00</output>
+    </div>
+    <div class="scale-labels"><span>0.0 · deterministic</span><span>0.5 · balanced</span><span>1.0 · creative</span></div>
+
+    <div class="pg-grid">
+      <div class="panel">
+        <div class="panel-title">Next-token probabilities · “The cat sat on the…”</div>
+        <div id="dist"></div>
+        <p class="hint">Computed live with p<sub>i</sub>(T) = softmax(z<sub>i</sub>/T), using logits that reproduce the illustrative probabilities from Module 02 at T = 1.</p>
+        <div class="meter">
+          <div class="meter-label"><span>Predictability</span><span>Variety &amp; risk</span></div>
+          <div class="meter-track"><div class="meter-fill" id="risk-fill"></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Prompt</div>
+        <div class="prompt-box">Describe the paper that introduced the Transformer architecture in two sentences.</div>
+        <div class="panel-title spaced">Model output <span class="badge" id="temp-badge"></span><span class="run-count" id="run-count"></span><button class="mini-btn" id="resample" type="button">↻ Sample again</button></div>
+        <div class="output-box fade-in" id="temp-out" aria-live="polite"></div>
+        <div class="legend"><mark>Highlighted</mark> = unsupported, exaggerated, or invented content</div>
+      </div>
+    </div>
+    <div class="takeaway" id="temp-note"></div>
+  </div>
+
+  <!-- 2. Context window / attention -->
+  <div class="pg-card">
+    <div class="pg-card-head">
+      <span class="pg-num">2</span>
+      <div>
+        <h2>Context window &amp; attention slider</h2>
+        <p>The model is processing the highlighted token <strong>“them”</strong>. Set how many previous tokens fit in its window — tokens outside the window simply do not exist for the model. The small numbers show illustrative attention weights.</p>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <label for="ctx">Window size</label>
+      <input type="range" id="ctx" min="1" max="21" step="1" value="4">
+      <output id="ctx-val" for="ctx">4 tokens</output>
+    </div>
+    <div class="scale-labels"><span>1 token</span><span>whole sentence (21)</span></div>
+
+    <div class="token-stream" id="tokens" aria-label="Sample sentence split into tokens"></div>
+
+    <div class="ctx-info">
+      <div>
+        <div class="panel-title">Can the model resolve the references?</div>
+        <div id="ctx-status" aria-live="polite"></div>
+      </div>
+      <div class="panel top-list">
+        <div class="panel-title">Where “them” pays the most attention</div>
+        <div id="ctx-top"></div>
+      </div>
+    </div>
+    <div class="takeaway"><strong>Takeaway:</strong> a toy window of 21 tokens behaves like a real one of 128,000: whatever falls outside is invisible, and attention can only be spread across what remains. The dashed <em>next?</em> token is the future — causal masking means no token can look at it.</div>
+  </div>
+
+  <!-- 3. Prompt specificity -->
+  <div class="pg-card">
+    <div class="pg-card-head">
+      <span class="pg-num">3</span>
+      <div>
+        <h2>Prompt specificity slider</h2>
+        <p>Slide from a vague request to the fully engineered prompt from Module 01 and watch what each added element does to the answer. <ins style="text-decoration:none;background:rgba(46,196,192,.25);border-radius:4px;padding:0 3px">Teal text</ins> marks what changed at each level.</p>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <label for="spec">Specificity</label>
+      <input type="range" id="spec" min="1" max="4" step="1" value="1">
+      <output id="spec-val" for="spec">Level 1</output>
+    </div>
+    <div class="ticks" id="spec-ticks">
+      <button type="button" data-l="1">1 · Vague</button>
+      <button type="button" data-l="2">2 · Topic</button>
+      <button type="button" data-l="3">3 · Audience</button>
+      <button type="button" data-l="4">4 · Engineered</button>
+    </div>
+
+    <div class="chips" id="spec-chips"></div>
+
+    <div class="spec-grid">
+      <div class="panel">
+        <div class="panel-title">Prompt</div>
+        <div class="prompt-box" id="spec-prompt"></div>
+        <div class="meter">
+          <div class="meter-label"><span>Answer usefulness</span><span id="spec-score"></span></div>
+          <div class="meter-track"><div class="meter-fill" id="spec-fill"></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Likely result</div>
+        <div class="output-box" id="spec-out" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="takeaway" id="spec-note"></div>
+  </div>
+</section>
+
+<!-- ===================== MODULE 03 ===================== -->
+<section class="module" id="m03"><div class="md" data-src="md03"></div></section>
+<script type="text/markdown" id="md03">
+# 03 · Chat Models, Human Feedback, and Tools
+
+> **Big idea:** A base language model can complete text. A **chat assistant** is a language model trained and packaged to participate in a structured conversation, follow instructions, and cooperate with tools.
+
+**Reading time:** ~15 minutes · **Focus:** SFT, RLHF, message roles, chat structure, and tool calls
+
+---
+
+## From “continue this text” to “help me with this task”
+
+Suppose we begin with:
+
+```text
+What is a good indoor activity for a family of four?
+```
+
+A base model might continue this as part of a questionnaire, a blog post, or a list of possible questions. What the user wants, however, is an **answer**.
+
+The evolution from base models through *instruction-tuned* models to *chat models* addresses exactly this mismatch.
+
+| Type of model | Typical behavior | Main challenge |
+|---|---|---|
+| **Base/completion model** | Continues a text sequence. | May continue the *document* rather than answer the question. |
+| **Instruction-tuned model** | Responds to requests in useful formats. | Has a weaker explicit structure for multi-turn dialogue. |
+| **Chat model** | Processes messages with roles and conversational context. | Still needs grounding, careful instructions, and safe tool handling. |
+
+Chat is not a completely different mathematical species of model. The underlying generator is still predicting tokens; **training and message formatting change the kind of continuation it learns to produce**.
+
+## 1. What is alignment trying to accomplish?
+
+The training objective of a base language model is not the same as the objective of a helpful assistant. A general training corpus contains excellent explanations, inaccurate claims, arguments, jokes, dangerous advice, and conflicting styles.
+
+A practical assistant should generally be:
+
+- **Helpful:** respond to legitimate user goals.
+- **Honest:** avoid unsupported claims and acknowledge uncertainty.
+- **Harmless:** avoid contributing to unnecessary harm.
+
+These goals are sometimes summarized as **HHH alignment**.
+
+A well-aligned assistant is not merely a model that produces pleasant prose. The aim is to make its *behavior* more suitable for conversation and decision support.
+
+## 2. The training pipeline: SFT → feedback → RLHF
+
+The lectures describe the classical reinforcement-learning-from-human-feedback pipeline.
+
+```mermaid
+flowchart TD
+    B[Pre-trained base model] --> S[Supervised fine-tuning]
+    S --> A[Instruction-following model]
+    A --> C[Generate candidate responses]
+    C --> H[People compare responses]
+    H --> R[Train a reward model]
+    A --> P[Optimize model behavior]
+    R --> P
+    P --> F[Aligned conversational assistant]
+```
+
+### Stage A · Supervised fine-tuning (SFT)
+
+Human-written or carefully selected examples show the model what a useful response looks like.
+
+```text
+User: Explain a black hole to a twelve-year-old.
+Assistant: Imagine a place where gravity is so strong that even light cannot escape…
+```
+
+Instead of learning *any plausible continuation*, the model learns the patterns of a **good assistant response**.
+
+**Strength:** clearer instruction following.  
+**Limit:** examples alone do not ensure correctness or good judgment in every situation.
+
+### Stage B · Human preference comparisons
+
+For one prompt, an SFT model generates several candidate answers. Human evaluators compare them, for example:
+
+| Candidate | Possible evaluation |
+|---|---|
+| A | Relevant and accurate, but a little lengthy. |
+| B | Confident and polished, but contains an invented fact. |
+| C | Correct, clear, and appropriately cautious. |
+
+The comparison is more informative than asking people to write a perfect answer from scratch every time.
+
+### Stage C · Reward model
+
+A **reward model** learns to estimate which outputs humans are likely to prefer. It assigns scores that can guide later optimization.
+
+The reward is not the same as an objective test of truth. Human preferences may be incomplete, inconsistent, or affected by presentation style.
+
+### Stage D · Reinforcement learning
+
+The instruction-following model is further optimized using the learned preference signal. The slide material highlights **PPO (Proximal Policy Optimization)** as a classical method for this stage.
+
+A key engineering concern is **reward hacking**: optimizing for the reward model's score instead of the real quality people care about.
+
+### Historical scale, not a specification
+
+The teaching slides give an illustrative early InstructGPT-era comparison:
+
+| Stage | Example scale shown in the lectures |
+|---|---:|
+| Base language-model corpus | About **499 billion tokens** |
+| SFT demonstration dataset | About **13,000 examples** |
+| Reward-model preference data | About **33,000 prompt/response records** |
+| RLHF training data | About **31,000 records** |
+
+These are **historical teaching figures** from a particular pipeline, not a description of how every present-day chat model is trained.
+
+## 3. Benefits and trade-offs of RLHF
+
+The goal is not to make a model superficially agreeable. Useful improvements can include better instruction following, appropriate refusals, and more calibrated expressions of uncertainty.
+
+There are also trade-offs:
+
+- **Preference bias:** a small group of annotators may influence the model's style.
+- **Reward-model limitations:** a numerical score may miss subtle factual errors.
+- **Alignment tax:** optimization for assistant-like behavior may weaken some capabilities or reduce flexibility in other tasks.
+- **No absolute guarantee:** training reduces some problematic behaviors but does not eliminate errors.
+
+This is why **evaluation** remains an essential part of the application lifecycle.
+
+## 4. Chat messages have roles
+
+A conversation is not simply one long, unlabeled piece of text. Chat-oriented interfaces associate messages with roles.
+
+| Role | Main purpose |
+|---|---|
+| **System** | High-level instructions and application behavior. |
+| **User** | The person's request or follow-up. |
+| **Assistant** | Replies, including intermediate tool requests where supported. |
+| **Tool** | Results returned by an external service or function. |
+
+Roles reduce ambiguity. A model can distinguish a user's request from an earlier assistant response or an external tool result.
+
+### ChatML: a way to visualize structured dialogue
+
+The slides introduce **ChatML** (Chat Markup Language) and special message-boundary tokens. A simplified representation looks like this:
+
+```text
+<|im_start|>system
+You are a concise study assistant.
+<|im_end|>
+<|im_start|>user
+Explain the difference between RAM and storage.
+<|im_end|>
+<|im_start|>assistant
+RAM holds data needed for active work; storage keeps data longer term.
+<|im_end|>
+```
+
+This is a **conceptual illustration of a chat transcript**. Exact token conventions and API formats depend on the model provider and version.
+
+The important idea is **role separation**, not memorizing one particular set of delimiters.
+
+> **Safety note:** Structured messages help establish instruction boundaries, but they do **not** make an application immune to prompt injection. Content retrieved from documents or tools must still be treated as potentially untrusted.
+
+## 5. Chat and completion: different interfaces, different strengths
+
+| Property | Raw completion-style workflow | Chat-style workflow |
+|---|---|---|
+| Main input | A text prefix | A sequence of role-labeled messages |
+| Natural behavior | Continue the text | Produce an assistant response |
+| Multi-turn structure | Must be designed manually | Explicit message boundaries |
+| Style control | Examples and prompt structure | Role instructions plus examples |
+| Ending the output | Often needs a stop condition | Usually has message-level completion handling |
+| Main engineering issue | Making a continuation look like the intended output | Managing context, priorities, and trustworthy actions |
+
+Chat interfaces simplify many ordinary tasks, but **they do not remove the need for prompt design**.
+
+## 6. The parameters behind a chat response
+
+The following parameters appear in the lecture examples. Availability and exact names differ across current APIs and models.
+
+| Parameter | What it controls or reports | Why it matters |
+|---|---|---|
+| `max_tokens` or equivalent | Output-length budget | Prevents unexpectedly long generations. |
+| `temperature` | Sampling randomness | Controls variation in supported models. |
+| `stop` | Stop sequences | Useful for bounded text formats. |
+| `stream` | Incremental response delivery | Shows output as it is produced. |
+| `n` | Number of candidate outputs | Allows comparing alternatives where supported. |
+| `logprobs` | Log-probabilities of tokens | Helps examine token-level scores. |
+| `top_logprobs` | Scores of alternative tokens | Reveals alternatives at a generation step. |
+| `logit_bias` | Adjustments to selected token scores | Fine-grained control where exposed. |
+
+**Two cautions:** token probabilities are not a calibrated measure of factual truth, and generating more candidates generally uses more computation/output resources.
+
+## 7. The application can extend the conversation with tools
+
+Think of two interleaved conversations:
+
+1. **Visible conversation:** what the user asks and what the assistant says.
+2. **Application–model conversation:** instructions, retrieved context, tool descriptions, tool results, and intermediate messages.
+
+This enables workflows that cannot be solved reliably from training data alone.
+
+### Example: checking a current train departure
+
+```text
+User: When is the next train?
+       ↓
+Model: Request a timetable lookup.
+       ↓
+Application: Execute the timetable API call.
+       ↓
+Tool: Return current departure information.
+       ↓
+Model: Explain the result to the user.
+```
+
+The model **requests** the action. The surrounding software **executes** the API call and supplies the result back to the model.
+
+Tools can be **read-only** (search, retrieve, check) or **write-capable** (save, edit, reserve). Write-capable tools need stronger permissions, validation, and user confirmation for consequential actions.
+
+### A practical scenario: a code assistant
+
+Suppose the user says:
+
+```text
+This code does not work. What is wrong?
+```
+
+But the code lives in an attached file. An application can retrieve the relevant section and include it as context:
+
+```python
+for i in range(100):
+    print i
+```
+
+The assistant can then explain that `print i` is Python 2 syntax and that Python 3 expects `print(i)`.
+
+**Lesson:** the user's message alone may not contain everything the model needs. The application is responsible for assembling a complete, relevant context.
+
+## 8. Writing a useful chat instruction
+
+A good application-level instruction usually defines:
+
+- the assistant's **job**;
+- the intended **audience**;
+- the **available information and tools**;
+- what to do if information is **missing**;
+- the **expected output format**.
+
+**Example:**
+
+```text
+You are a technical support assistant for beginner users.
+Use the documentation provided in the conversation.
+Provide no more than five numbered troubleshooting steps.
+If the documentation does not support a claim, say what is unknown.
+Do not claim that you changed any settings unless a tool confirms it.
+```
+
+This is more valuable than a vague command to “be very intelligent.” It is *testable* and *operational*.
+
+---
+
+## The shortest useful summary
+
+**Base model → instruction tuning → preference alignment → structured chat → tool-using application.**
+
+| If you remember only one thing about… | Remember this |
+|---|---|
+| **SFT** | Demonstrates what good assistant answers look like. |
+| **RLHF** | Uses preferences to improve assistant behavior. |
+| **Chat roles** | Tell the model who is speaking and what kind of content it is reading. |
+| **Tool calls** | The application performs real actions; the model selects and interprets requests/results. |
+| **Safety and reliability** | Training and role labels help, but do not replace verification or permission checks. |
+
+### Check your understanding
+
+1. Why might a base model continue a questionnaire rather than answer a question?
+2. How does a reward model differ from a supervised example?
+3. What does a message role contribute to a chat transcript?
+4. Who actually runs an API call: the model or the application?
+5. Why is a confident assistant response not necessarily a verified one?
+
+**Next:** [04 · Designing LLM Applications](#m04)
+</script>
+
+<!-- ===================== MODULE 04 ===================== -->
+<section class="module" id="m04"><div class="md" data-src="md04"></div></section>
+<script type="text/markdown" id="md04">
+# 04 · Designing Applications with Language Models
+
+> **Big idea:** The model produces text; the **application** turns a real-world problem into the right model input and turns the output into a useful result. Good applications are built around this transformation.
+
+**Reading time:** ~17 minutes · **Focus:** application loops, prompt assembly, context, tools, and evaluation
+
+---
+
+## 1. Think in loops, not isolated prompts
+
+A simple prompt is one interaction. An LLM application is a process:
+
+```mermaid
+flowchart LR
+    U[User's goal] --> A[Application: understand and prepare]
+    A --> C[Relevant context + prompt]
+    C --> L[Language model]
+    L --> O[Generated output]
+    O --> V[Validate / transform / act]
+    V --> R[Result for the user]
+    R -. Next interaction .-> U
+```
+
+The application is the bridge between two worlds:
+
+- **User domain:** documents, problems, preferences, appointments, code, real-world decisions.
+- **Model domain:** tokenized input, instructions, context, and generated output.
+
+A proofreading assistant might need only one pass. A travel assistant may require many steps, external services, and remembered preferences.
+
+## 2. Four dimensions of application complexity
+
+The slides compare three illustrative applications.
+
+| Dimension | Text proofreading | IT support | Travel planning |
+|---|---|---|---|
+| **Medium** | Typed text | Possibly spoken interaction | Web interface, text, and APIs |
+| **Abstraction** | One bounded task | Many possible technical causes | Many competing requirements |
+| **Context** | Usually the user's text | Documentation, device details, history | Preferences, dates, budgets, external data |
+| **State** | Often independent requests | History of attempted fixes | A plan evolving across many interactions |
+
+**Design principle:** as abstraction, external context, and state increase, the application must do more than forward a user message to a model.
+
+## 3. Four requirements of an effective prompt
+
+The lectures organize prompt quality around four criteria:
+
+1. **A familiar format.** Structure the prompt like a recognizable task, document, or dialogue. The material describes this as the *Little Red Riding Hood principle*: familiar patterns make the expected continuation easier to infer.
+2. **Enough relevant information.** Supply what is necessary to solve the problem, while avoiding a flood of unrelated details.
+3. **A clear direction.** Tell the model what it should accomplish and how the answer should begin or be organized.
+4. **A controlled stopping point.** Define the output's scope so that the model knows when it is finished.
+
+These criteria can be checked separately. For example, a prompt may have perfect formatting but still lack the data required for an accurate answer.
+
+### From weak to operational
+
+**Weak request:**
+
+```text
+My computer is slow. Help.
+```
+
+**Better task definition:**
+
+```text
+# Goal
+Create a beginner-friendly troubleshooting plan for a slow Windows computer.
+
+# Observations
+- Performance deteriorated over the last few days.
+- Windows 10 is installed.
+- The system was updated one week ago.
+- Browser, document editor, and messaging app are often open.
+- The fan is louder than usual.
+
+# Requirements
+- Suggest at most five safe diagnostic steps.
+- Cover CPU load, RAM usage, disk space, and background processes.
+- Give a brief explanation of what each observation could indicate.
+- Do not recommend destructive changes or assume a cause without evidence.
+```
+
+This prompt makes the task answerable and limits potentially unhelpful advice.
+
+## 4. Feedforward: preparing the model's input
+
+In the architecture discussed in the slides, a **feedforward pass** is the application's preparation pipeline that transforms an incoming problem into a prompt. This is an **application-level term** here, not the transformer's internal feed-forward neural-network block.
+
+A useful four-stage breakdown is:
+
+| Stage | What happens? | Example |
+|---|---|---|
+| **Context retrieval** | Collect useful information. | Read the relevant support article. |
+| **Snippetization** | Split long material into manageable excerpts. | Extract the paragraph about fan noise. |
+| **Prioritization** | Rank pieces by usefulness and relevance. | Device-specific instructions before generic tips. |
+| **Prompt assembly** | Combine task, constraints, and context. | Build the final troubleshooting request. |
+
+```text
+User request
+   ↓
+Collect context (user information + relevant documents)
+   ↓
+Convert / split material into useful snippets
+   ↓
+Rank and select snippets within a context budget
+   ↓
+Assemble the prompt
+   ↓
+Call the model
+```
+
+### Where does context come from?
+
+**Direct context** is supplied by the user, such as a document to summarize.
+
+**Indirect context** comes from other relevant resources, such as a knowledge base, API, or conversation history.
+
+**Boilerplate** is the stable text that ties the input together: role instructions, required output structure, and reusable constraints.
+
+Boilerplate is not a substitute for evidence. It provides the *frame* in which retrieved or supplied facts should be interpreted.
+
+## 5. Managing a finite context budget
+
+More context is not always better. A large document can contain many relevant-looking but distracting passages.
+
+A sensible selection policy considers:
+
+- **Relevance:** does the excerpt address the current question?
+- **Priority:** is it essential or merely nice to have?
+- **Freshness:** might its information have changed?
+- **Duplication:** does another excerpt already say the same thing?
+- **Cost:** how many tokens and how much retrieval time does it consume?
+
+For a long conversation, the application may retain the most recent messages and compress older exchanges into a structured summary. This avoids treating every earlier sentence as equally valuable.
+
+> **Useful practice:** Keep a compact record of the user's goal, confirmed facts, decisions already made, and unresolved questions. These often matter more than the entire chat transcript.
+
+## 6. Choosing a model is an engineering decision
+
+Models differ in quality, latency, capacity, and cost. Choosing the largest available model for every operation is rarely a complete design strategy.
+
+| Objective | Possible design choice |
+|---|---|
+| Minimize response time | Use a faster model or precompute stable context. |
+| Improve quality on a complex task | Use a more capable model and stronger source grounding. |
+| Reduce cost | Keep prompts focused and avoid unnecessary repeated calls. |
+| Improve a narrow specialized workflow | Evaluate task-specific tuning or task decomposition. |
+
+A larger model may help, but **poorly selected context can still undermine the result**.
+
+## 7. Converting model output into something useful
+
+A model's output might be a paragraph, JSON, a code snippet, or a proposal for a tool call. The application must decide what happens next.
+
+Examples:
+
+- **Document assistant:** render a summary with source links.
+- **IT assistant:** display safe, ordered troubleshooting steps.
+- **Calendar assistant:** turn a structured request into a validated event proposal.
+- **Code assistant:** check generated code with tests before suggesting it for use.
+
+The key separation is between **generating a proposed result** and **performing an external action**.
+
+## 8. More advanced loops: state, retrieval, and reasoning
+
+### Stateful conversations
+
+One-shot applications can discard the entire context after delivering an answer. Stateful applications preserve useful history:
+
+```text
+Question 1 → Answer 1
+      ↓
+Question 2 + relevant history → Answer 2
+      ↓
+Question 3 + updated state → Answer 3
+```
+
+State can include conversation summaries, prior tool results, user decisions, and the status of a task.
+
+### Retrieval-augmented generation (RAG)
+
+When facts reside in external or private documents, an application can retrieve relevant excerpts **before** asking the model to answer.
+
+```text
+Question → Retrieve documents → Select excerpts → Ask model → Grounded answer
+```
+
+Retrieval may use keyword indexes or semantic vector search. A query can be taken directly from the user or reformulated to improve search.
+
+**RAG does not guarantee accuracy:** retrieving the wrong document or misreading the right one can still produce a poor answer.
+
+### Breaking difficult tasks into stages
+
+A complex task often improves when the application requires explicit intermediate *outputs*, such as:
+
+1. identify constraints;
+2. gather evidence;
+3. compare alternatives;
+4. check the result against the constraints;
+5. produce a concise final recommendation.
+
+This is a practical use of stepwise prompting or task decomposition. The output steps should be verifiable; simply generating a long explanation is not proof of correctness.
+
+## 9. Tools give applications access to the outside world
+
+A language model on its own cannot inspect a user's live timetable or write a file on an external server. An application can provide **tools** with defined names, parameters, permissions, and return values.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant M as Model
+    participant A as Application
+    participant T as External service
+    U->>A: Request involving live information
+    A->>M: Prompt + available tool definitions
+    M-->>A: Proposed tool request
+    A->>T: Validated API call
+    T-->>A: Result
+    A->>M: Tool result + context
+    M-->>A: Answer
+    A-->>U: Useful response
+```
+
+### Read-only tools versus world-changing tools
+
+| Read-only | Write-capable |
+|---|---|
+| Search documentation | Update a document |
+| Retrieve current information | Create a calendar event |
+| Check an order's status | Place or modify an order |
+| Look up code examples | Open a pull request |
+
+Write-capable tools require stricter confirmation, permissions, and checks. The model can propose arguments, but the application must validate and execute them.
+
+### ReAct-style interaction
+
+The slides discuss **ReAct** as an iterative pattern joining reasoning about the task with external action. A simplified version is:
+
+```text
+Identify the next question → Call search/lookup → Read the result
+           ↑                                      ↓
+           └──────── Decide whether more evidence is needed
+```
+
+A tool loop is useful when the answer cannot be prepared from a single static prompt.
+
+## 10. Evaluate the entire application
+
+Good-sounding answers are not enough. An LLM application should be evaluated for actual utility, factual reliability, and user outcomes.
+
+### Offline evaluation: before release
+
+Run a fixed set of test cases and compare systems under controlled conditions. Possible measures include:
+
+- accuracy against verified answers;
+- success of generated code on tests;
+- adherence to format and constraints;
+- quality of retrieved evidence;
+- time and cost per task.
+
+Some tasks can be evaluated automatically. Others require human assessment or carefully designed model-assisted grading.
+
+> **Important:** Test the **whole pipeline**, not only the final model call. A failure in retrieval or prompt assembly can dominate the result.
+
+### Online evaluation: in real use
+
+Measure how people actually interact with the application. The lectures emphasize telemetry and meaningful indirect signals.
+
+| Observable signal | Possible meaning | Why interpretation is tricky |
+|---|---|---|
+| Positive/negative rating | User satisfaction | Not all users provide feedback. |
+| Suggested code accepted | Suggestion may be useful | Users may later modify or revert it. |
+| A calendar event successfully created | A concrete outcome occurred | The event may still need correction. |
+| Very short session | The task finished quickly | Or the user abandoned the system. |
+
+**Measure success in the user's domain, not merely how elegant the text looks.**
+
+---
+
+## Application design checklist
+
+Before releasing an LLM feature, verify:
+
+- [ ] The user problem and expected outcome are clearly defined.
+- [ ] Necessary context is available and unrelated material is excluded.
+- [ ] Prompt structure and stopping behavior are specified.
+- [ ] The model and workflow fit latency, cost, and quality requirements.
+- [ ] Long conversations have an explicit state-management strategy.
+- [ ] Tool calls have validation and appropriate permissions.
+- [ ] Failures can be detected, explained, and recovered from.
+- [ ] Both offline tests and real-world outcome metrics exist.
+
+### Five takeaways
+
+1. An LLM application is a **transformation loop**, not just a prompt.
+2. Context retrieval, selection, and assembly are core responsibilities of the application.
+3. State, RAG, and tools enable more demanding workflows.
+4. External actions require additional validation and controls.
+5. The right evaluation target is **successful task completion**, not persuasive prose.
+
+**Next:** 05 · Prompt Content and Retrieval *(coming soon)*
+</script>
+
+  </main>
+</div>
+
+<footer>Prompt Engineering &amp; LLMs · Educational course notes with an interactive playground</footer>
+
+<script>
+/* =========================================================
+   Theme
+   ========================================================= */
+(function () {
+  const root = document.documentElement;
+  let saved = null;
+  try { saved = localStorage.getItem('pe-theme'); } catch (e) {}
+  if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+  window.isDarkTheme = function () {
+    const t = root.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  };
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    const next = window.isDarkTheme() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('pe-theme', next); } catch (e) {}
+    renderMermaid();
+  });
+})();
+
+/* =========================================================
+   Markdown + math + diagrams
+   ========================================================= */
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function renderMarkdown() {
+  document.querySelectorAll('.md[data-src]').forEach(el => {
+    const src = document.getElementById(el.dataset.src).textContent.trim();
+    if (!window.marked) {
+      const pre = document.createElement('pre');
+      pre.className = 'fallback';
+      pre.textContent = src;
+      el.replaceChildren(pre);
+      return;
     }
+    // Protect math from the Markdown parser
+    const maths = [];
+    const protectedSrc = src
+      .replace(/\$\$([\s\S]+?)\$\$/g, (m, t) => { maths.push({ t, d: true }); return '%%MATH' + (maths.length - 1) + '%%'; })
+      .replace(/\$([^$\n]+?)\$/g, (m, t) => { maths.push({ t, d: false }); return '%%MATH' + (maths.length - 1) + '%%'; });
 
-    window.addEventListener('scroll', updateReadingState, { passive: true });
-    window.addEventListener('resize', updateReadingState);
-    updateReadingState();
-  </script>
+    let html = marked.parse(protectedSrc, { gfm: true });
+    html = html.replace(/%%MATH(\d+)%%/g, (m, i) => {
+      const { t, d } = maths[+i];
+      try {
+        return window.katex ? katex.renderToString(t, { displayMode: d, throwOnError: false }) : escapeHtml(t);
+      } catch (e) { return escapeHtml(t); }
+    });
+    el.innerHTML = html;
+
+    el.querySelectorAll('table').forEach(t => {
+      const w = document.createElement('div');
+      w.className = 'table-wrap';
+      t.parentNode.insertBefore(w, t);
+      w.appendChild(t);
+    });
+    el.querySelectorAll('code.language-mermaid').forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'mermaid';
+      d.dataset.graph = c.textContent;
+      d.textContent = c.textContent;
+      c.parentElement.replaceWith(d);
+    });
+  });
+  renderMermaid();
+}
+
+function renderMermaid() {
+  if (!window.mermaid) return;
+  const nodes = document.querySelectorAll('.mermaid');
+  nodes.forEach(n => { n.removeAttribute('data-processed'); n.textContent = n.dataset.graph || n.textContent; });
+  try {
+    mermaid.initialize({ startOnLoad: false, theme: window.isDarkTheme() ? 'dark' : 'neutral', securityLevel: 'strict', fontFamily: 'Inter, sans-serif' });
+    mermaid.run({ nodes: nodes });
+  } catch (e) { console.warn('Mermaid render failed', e); }
+}
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+function setFill(input) {
+  const min = +input.min, max = +input.max, v = +input.value;
+  input.style.setProperty('--fill', ((v - min) / (max - min) * 100) + '%');
+}
+
+/* =========================================================
+   1. Temperature slider
+   ========================================================= */
+const TEMP_TOKENS = [
+  { tok: 'mat',   z: 2.0 },
+  { tok: 'sofa',  z: 1.4 },
+  { tok: 'floor', z: 0.9 },
+  { tok: 'moon',  z: -0.4 }
+];
+
+const TEMP_BANDS = [
+  {
+    max: 0.15, label: 'Deterministic · factual', color: 'var(--cold)',
+    variants: [
+      'The Transformer was introduced in the 2017 paper “Attention Is All You Need.” It replaced recurrent processing with self-attention, letting each token position draw directly on information from other positions in the sequence.',
+      'The Transformer was introduced in the 2017 paper “Attention Is All You Need.” It replaced recurrent processing with self-attention, letting each token position draw directly on information from other positions in the sequence.'
+    ],
+    note: '<strong>T ≈ 0:</strong> the model (almost) always picks the top-scoring token, so sampling again gives the <em>identical</em> answer. Ideal for factual extraction and summaries — but remember: predictable is not the same as accurate.'
+  },
+  {
+    max: 0.4, label: 'Focused · low variation', color: 'var(--cold)',
+    variants: [
+      'The Transformer architecture was presented in “Attention Is All You Need” (2017). Instead of reading a sequence step by step with recurrence, it uses attention to connect every token position with the others.',
+      'In 2017, the paper “Attention Is All You Need” introduced the Transformer. Its key idea was to make attention the central mechanism, replacing recurrent processing of the sequence.'
+    ],
+    note: '<strong>Low temperature:</strong> the facts stay the same, but the wording starts to vary between samples. Probability is still concentrated on the most likely tokens.'
+  },
+  {
+    max: 0.65, label: 'Balanced', color: 'var(--accent)',
+    variants: [
+      'Back in 2017, “Attention Is All You Need” proposed a bold idea: drop recurrence and let attention do the heavy lifting. The result — the Transformer — made training on huge text collections practical and became the backbone of GPT-style models.',
+      'The Transformer arrived in 2017 with “Attention Is All You Need,” a paper that asked: what if attention were the whole architecture? That shift made large-scale training far more practical and paved the way for GPT.'
+    ],
+    note: '<strong>Middle range (≈0.5–0.8):</strong> good for ordinary writing and dialogue. More personality and variety in tone, while the content stays mostly grounded.'
+  },
+  {
+    max: 0.85, label: 'Creative · loose', color: 'var(--hot)',
+    variants: [
+      'In 2017 a team of researchers lit the fuse with “Attention Is All You Need,” a paper <mark>that instantly made every other architecture obsolete</mark>. Like a conductor hearing every instrument at once, the Transformer lets each word listen to all the others — <mark>and it learned grammar overnight</mark>.',
+      'Picture 2017: “Attention Is All You Need” drops like a new album, and suddenly sequences are no longer read one note at a time. <mark>Within weeks, every lab on Earth had switched over</mark>, and the Transformer became the engine of modern AI.'
+    ],
+    note: '<strong>Higher temperature:</strong> vivid metaphors appear — great for storytelling — but less likely tokens now slip in, and with them <em>exaggerations</em> that sound confident but are not supported.'
+  },
+  {
+    max: 1.01, label: 'Highly creative · hallucinating', color: 'var(--warn)',
+    variants: [
+      'The Transformer was <mark>first sketched in 1998 on a café napkin in Lisbon by Dr. Elena Varga</mark> and published as <mark>“Attention Is Mostly What You Need” (Nature, vol. 412)</mark>. Its <mark>seventeen golden attention heads dream in colour</mark> — full text at <mark>https://transformer-origins.org/napkin.pdf</mark>.',
+      'According to <mark>Professor Hiro Tanaka’s 2003 keynote at the Lunar Computing Symposium</mark>, the Transformer <mark>converts electricity directly into syntax</mark>; the original paper, <mark>“Transformers: Attention Unbound” (ICML 2004)</mark>, <mark>won three Nobel prizes</mark>. Source: <mark>www.attention-archive.net/vol9</mark>.'
+    ],
+    note: '<strong>T → 1 and above:</strong> unlikely tokens are sampled often, and one odd token steers all the following ones (autoregression!). The result is fluent but full of <em>factual</em> and <em>structural</em> hallucinations — invented dates, people, citations and URLs.'
+  }
+];
+
+const tempInput = document.getElementById('temp');
+let tempRun = 0;
+let lastBand = -1;
+
+function softmax(T) {
+  const zs = TEMP_TOKENS.map(t => t.z / T);
+  const m = Math.max(...zs);
+  const ex = zs.map(z => Math.exp(z - m));
+  const s = ex.reduce((a, b) => a + b, 0);
+  return ex.map(e => e / s);
+}
+
+function updateTemp(resample) {
+  const v = +tempInput.value;
+  setFill(tempInput);
+  document.getElementById('temp-val').textContent = v.toFixed(2);
+
+  // Distribution
+  const T = Math.max(v, 0.001);
+  const probs = v === 0 ? TEMP_TOKENS.map((t, i) => (i === 0 ? 1 : 0)) : softmax(T);
+  document.getElementById('dist').innerHTML = TEMP_TOKENS.map((t, i) =>
+    `<div class="dist-row${i > 1 ? ' low' : ''}"><span>${t.tok}</span><div class="dist-bar"><div class="dist-fill" style="width:${(probs[i] * 100).toFixed(1)}%"></div></div><span>${(probs[i] * 100).toFixed(1)}%</span></div>`
+  ).join('');
+
+  const fill = document.getElementById('risk-fill');
+  fill.style.width = Math.max(v * 100, 3) + '%';
+  fill.style.background = `linear-gradient(90deg, var(--cold), ${v > 0.6 ? 'var(--hot)' : 'var(--accent)'})`;
+
+  // Output
+  const bandIndex = TEMP_BANDS.findIndex(b => v <= b.max);
+  const band = TEMP_BANDS[bandIndex];
+  if (bandIndex !== lastBand) { tempRun = 0; lastBand = bandIndex; }
+  if (resample) tempRun++;
+  const out = document.getElementById('temp-out');
+  out.innerHTML = band.variants[tempRun % band.variants.length];
+  out.style.borderLeftColor = band.color;
+  out.classList.remove('fade-in'); void out.offsetWidth; out.classList.add('fade-in');
+
+  const badge = document.getElementById('temp-badge');
+  badge.textContent = band.label;
+  document.getElementById('run-count').textContent = 'sample #' + (tempRun + 1);
+  document.getElementById('temp-note').innerHTML = band.note;
+}
+tempInput.addEventListener('input', () => updateTemp(false));
+document.getElementById('resample').addEventListener('click', () => updateTemp(true));
+
+/* =========================================================
+   2. Context window / attention slider
+   ========================================================= */
+const CTX_TOKENS = ['Susan', 'entered', 'the', 'lab', 'with', 'a', 'stack', 'of', 'notes', '.',
+                    'After', 'a', 'long', 'meeting', ',', 'the', 'professor', 'asked', 'her', 'to', 'present', 'them'];
+// Illustrative relevance scores of each earlier token for the focus token "them"
+const CTX_REL = [1.6, 0.3, 0.15, 0.5, 0.25, 0.15, 1.4, 0.2, 4.5, 0.1,
+                 0.2, 0.15, 0.2, 0.9, 0.1, 0.15, 0.9, 0.5, 1.1, 0.3, 1.8];
+const FOCUS = CTX_TOKENS.length - 1; // "them"
+const NOTES_IDX = 8, SUSAN_IDX = 0, HER_IDX = 18;
+
+const ctxInput = document.getElementById('ctx');
+const tokenEl = document.getElementById('tokens');
+
+function updateCtx() {
+  const N = +ctxInput.value;
+  setFill(ctxInput);
+  document.getElementById('ctx-val').textContent = N + (N === 1 ? ' token' : ' tokens');
+
+  const visible = i => (FOCUS - i) <= N;
+  let sum = 0;
+  for (let i = 0; i < FOCUS; i++) if (visible(i)) sum += CTX_REL[i];
+
+  let html = '';
+  const weights = [];
+  for (let i = 0; i < FOCUS; i++) {
+    const vis = visible(i);
+    const w = vis ? CTX_REL[i] / sum : 0;
+    if (vis) weights.push({ tok: CTX_TOKENS[i], w, i });
+    const alpha = vis ? (0.08 + w * 1.4).toFixed(2) : 0;
+    const style = vis ? ` style="background: rgba(124, 108, 255, ${Math.min(alpha, 0.85)})"` : '';
+    html += `<span class="tok ${vis ? 'in' : 'out'}"${style} title="${vis ? 'Attention weight: ' + (w * 100).toFixed(1) + '%' : 'Outside the context window'}">${escapeHtml(CTX_TOKENS[i])}<span class="w">${vis ? Math.round(w * 100) + '%' : ''}</span></span>`;
+  }
+  html += `<span class="tok focus" title="Token being processed">${CTX_TOKENS[FOCUS]}<span class="w">query</span></span>`;
+  html += `<span class="tok future" title="Future tokens are hidden by causal masking">next?<span class="w"></span></span>`;
+  tokenEl.innerHTML = html;
+
+  // Status messages
+  const notesIn = visible(NOTES_IDX);
+  const herIn = visible(HER_IDX);
+  const susanIn = visible(SUSAN_IDX);
+  let st = '';
+  st += notesIn
+    ? `<div class="status ok">✓ <strong>“notes”</strong> is inside the window → the model can link <em>them → notes</em>.</div>`
+    : `<div class="status bad">✗ <strong>“notes”</strong> is outside the window (needs ≥ ${FOCUS - NOTES_IDX} tokens). <em>“them”</em> could now seem to mean ${N >= FOCUS - 13 ? '“the meeting”' : 'almost anything'} — a recipe for a confident wrong answer.</div>`;
+  if (herIn) {
+    st += susanIn
+      ? `<div class="status ok">✓ <strong>“Susan”</strong> is visible too → <em>her → Susan</em> can be resolved.</div>`
+      : `<div class="status bad">✗ <strong>“Susan”</strong> is outside the window (needs all ${FOCUS} tokens) → the model sees <em>“her”</em> but not who she is.</div>`;
+  }
+  document.getElementById('ctx-status').innerHTML = st;
+
+  weights.sort((a, b) => b.w - a.w);
+  document.getElementById('ctx-top').innerHTML = weights.slice(0, 4).map(o =>
+    `<div class="dist-row"><span>${escapeHtml(o.tok)}</span><div class="dist-bar"><div class="dist-fill" style="width:${(o.w * 100).toFixed(1)}%"></div></div><span>${Math.round(o.w * 100)}%</span></div>`
+  ).join('');
+}
+ctxInput.addEventListener('input', updateCtx);
+
+/* =========================================================
+   3. Prompt specificity slider
+   ========================================================= */
+const SPEC_CHIPS = ['Clear topic', 'Audience', 'Scope & sequence', 'Presentation format', 'Constraints'];
+const SPEC_LEVELS = [
+  {
+    prompt: 'Explain transformers.',
+    on: [false, false, false, false, false],
+    score: 15, color: 'var(--warn)',
+    out: 'Transformers are devices that transfer electrical energy between two circuits through electromagnetic induction. They are used to step voltage up or down in power grids, chargers and household appliances… <span class="dim">Or did you mean the neural-network architecture? Please clarify.</span>',
+    note: '<strong>Level 1 · Vague:</strong> the model doesn’t even know <em>which</em> “transformer” you mean. No audience, no scope, no format, no length — it can only guess the most common continuation.'
+  },
+  {
+    prompt: 'Explain <ins>the transformer architecture used in machine learning</ins>.',
+    on: [true, false, false, false, false],
+    score: 40, color: 'var(--hot)',
+    out: 'The transformer (Vaswani et al., 2017) is a sequence-transduction architecture based on multi-head scaled dot-product self-attention. Each layer projects token embeddings into queries, keys and values, computes softmax(QKᵀ/√d)V, then applies a position-wise feed-forward network with residual connections and layer normalization. Positional encodings inject order information, while encoder–decoder cross-attention links source and target representations… <span class="dim">(continues in the same dense style)</span>',
+    note: '<strong>Level 2 · Topic:</strong> right domain now, but no audience. The answer is correct yet written for experts — undefined jargon, no structure, no length limit.'
+  },
+  {
+    prompt: 'Explain the transformer architecture <ins>to first-year computer science students.</ins>\n<ins>Begin with the problem faced by seq2seq models, then introduce attention.</ins>',
+    on: [true, true, true, false, false],
+    score: 72, color: 'var(--accent)',
+    out: 'Early translation models (seq2seq) used an encoder to squeeze a whole sentence into one fixed-size vector and a decoder to unpack it. For long sentences, details got lost — a bottleneck. Attention fixed this by letting the decoder look back at every input word and decide how much each one matters at each step. The transformer, introduced in 2017, takes this idea further: attention becomes the main mechanism of the whole network, so… <span class="dim">(continues for another ~800 words, with no table, no analogy, and some terms like “embedding” used before they are defined)</span>',
+    note: '<strong>Level 3 · Audience + sequence:</strong> the explanation now has the right level and a logical order. But without format and length constraints it rambles, and terminology slips through undefined.'
+  },
+  {
+    prompt: 'Explain the transformer architecture to first-year computer science students.\nBegin with the problem faced by seq2seq models, then introduce attention.\n<ins>Use one simple analogy, one comparison table, and no more than 300 words.</ins>\n<ins>Define any technical term before using it.</ins>',
+    on: [true, true, true, true, true],
+    score: 95, color: 'var(--ok)',
+    out: '<h4>The problem</h4><p>A <strong>seq2seq model</strong> (an encoder–decoder that turns one sequence into another) squeezed a whole sentence into one fixed vector. Long sentences lost details.</p>' +
+         '<h4>The fix: attention</h4><p><strong>Attention</strong> (a way of weighting how relevant each input word is right now) lets the model look back at every word instead.</p>' +
+         '<p><strong>Analogy:</strong> instead of memorising a whole lecture and answering from memory, you keep your notes open and glance at the relevant page for each question.</p>' +
+         '<h4>The transformer</h4><p>The <strong>transformer</strong> (2017) makes attention the core of the network, so every token can draw on every other token.</p>' +
+         '<table><tr><th></th><th>seq2seq</th><th>Transformer</th></tr><tr><td>Input memory</td><td>One vector</td><td>Every token</td></tr><tr><td>Long inputs</td><td>Details lost</td><td>Relevant details kept</td></tr><tr><td>Processing</td><td>Step by step</td><td>In parallel</td></tr></table>' +
+         '<p class="dim">≈ 170 words · every term defined before use</p>',
+    note: '<strong>Level 4 · Engineered:</strong> audience, scope &amp; sequence, presentation format and constraints are all specified — exactly the four elements from Module 01, §4. You are no longer hoping for a good completion; you are <em>designing the conditions for one</em>.'
+  }
+];
+
+const specInput = document.getElementById('spec');
+function updateSpec() {
+  const L = +specInput.value;
+  const d = SPEC_LEVELS[L - 1];
+  setFill(specInput);
+  document.getElementById('spec-val').textContent = 'Level ' + L;
+  document.getElementById('spec-prompt').innerHTML = d.prompt;
+  document.getElementById('spec-chips').innerHTML = SPEC_CHIPS.map((c, i) =>
+    `<span class="chip${d.on[i] ? ' on' : ''}">${c}</span>`).join('');
+  const out = document.getElementById('spec-out');
+  out.innerHTML = d.out;
+  out.style.borderLeftColor = d.color;
+  out.classList.remove('fade-in'); void out.offsetWidth; out.classList.add('fade-in');
+  const fill = document.getElementById('spec-fill');
+  fill.style.width = d.score + '%';
+  fill.style.background = d.color;
+  document.getElementById('spec-score').textContent = d.score + '%';
+  document.getElementById('spec-note').innerHTML = d.note;
+  document.querySelectorAll('#spec-ticks button').forEach(b => b.classList.toggle('on', +b.dataset.l === L));
+}
+specInput.addEventListener('input', updateSpec);
+document.querySelectorAll('#spec-ticks button').forEach(b =>
+  b.addEventListener('click', () => { specInput.value = b.dataset.l; updateSpec(); }));
+
+/* =========================================================
+   Active section highlighting in the sidebar
+   ========================================================= */
+function setupNav() {
+  const links = [...document.querySelectorAll('#toc a')];
+  const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+  if (!('IntersectionObserver' in window)) return;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => s && obs.observe(s));
+}
+
+/* =========================================================
+   Init
+   ========================================================= */
+updateTemp(false);
+updateCtx();
+updateSpec();
+window.addEventListener('DOMContentLoaded', () => {
+  renderMarkdown();
+  setupNav();
+});
+</script>
 </body>
 </html>
